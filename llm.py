@@ -118,10 +118,10 @@ def get_rag_chain():
         history_messages_key="chat_history",
         output_messages_key="answer",
     ).pick('answer')
-    
+
     return conversational_rag_chain
 
-
+    
 def get_ai_response(user_message):
     dictionary_chain = get_dictionary_chain()
     rag_chain = get_rag_chain()

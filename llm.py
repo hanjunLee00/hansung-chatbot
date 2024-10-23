@@ -20,7 +20,6 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
     return store[session_id]
 
 
-
 def get_retriever():
     embedding = OpenAIEmbeddings(model='text-embedding-3-large')
     index_name = 'crawled-db'
@@ -118,7 +117,6 @@ def get_rag_chain():
     ).pick('answer')
     
     return conversational_rag_chain
-
 
 def get_ai_response(user_message):
     dictionary_chain = get_dictionary_chain()

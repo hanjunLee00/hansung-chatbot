@@ -14,18 +14,18 @@ from config import answer_examples
 
 store = {}
 
-
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
     if session_id not in store:
         store[session_id] = ChatMessageHistory()
     return store[session_id]
 
 
+
 def get_retriever():
     embedding = OpenAIEmbeddings(model='text-embedding-3-large')
-    index_name = 'tax-markdown-index'
+    index_name = 'crawled-db'
     database = PineconeVectorStore.from_existing_index(index_name=index_name, embedding=embedding)
-    retriever = database.as_retriever(search_kwargs={'k': 4})
+    retriever = database.as_retriever(search_kwargs={'k': 3})
     return retriever
 
 def get_history_retriever():
@@ -60,7 +60,7 @@ def get_llm(model='gpt-4o'):
 
 
 def get_dictionary_chain():
-    dictionary = ["사람을 나타내는 표현 -> 거주자"]
+    dictionary = ["사람을 나타내는 표현 -> 학생"]
     llm = get_llm()
     prompt = ChatPromptTemplate.from_template(f"""
         사용자의 질문을 보고, 우리의 사전을 참고해서 사용자의 질문을 변경해주세요.
@@ -89,15 +89,13 @@ def get_rag_chain():
         examples=answer_examples,
     )
     system_prompt = (
-        "당신은 소득세법 전문가입니다. 사용자의 소득세법에 관한 질문에 답변해주세요"
-        "아래에 제공된 문서를 활용해서 답변해주시고"
-        "답변을 알 수 없다면 모른다고 답변해주세요"
-        "답변을 제공할 때는 소득세법 (XX조)에 따르면 이라고 시작하면서 답변해주시고"
-        "2-3 문장정도의 짧은 내용의 답변을 원합니다"
+        "당신은 한성대 공지사항 전문가입니다. 사용자의 공지사항 물음에 대해 답해주세요"
+        "질문에 관해서는 반드시 가장 최근의 공지들부터 알려주세요. 지나간 공지들에 대해서는 사실상 의미가 없습니다"
+        ""
         "\n\n"
         "{context}"
     )
-    
+
     qa_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", system_prompt),
@@ -118,10 +116,10 @@ def get_rag_chain():
         history_messages_key="chat_history",
         output_messages_key="answer",
     ).pick('answer')
-
+    
     return conversational_rag_chain
 
-    
+
 def get_ai_response(user_message):
     dictionary_chain = get_dictionary_chain()
     rag_chain = get_rag_chain()

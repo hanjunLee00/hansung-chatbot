@@ -22,7 +22,7 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
 
 def get_retriever():
     embedding = OpenAIEmbeddings(model='text-embedding-3-large')
-    index_name = 'crawled-db'
+    index_name = 'crawled-db-ver2'
     database = PineconeVectorStore.from_existing_index(index_name=index_name, embedding=embedding)
     retriever = database.as_retriever(search_kwargs={'k': 3})
     return retriever
@@ -66,7 +66,6 @@ def get_dictionary_chain():
         만약 변경할 필요가 없다고 판단된다면, 사용자의 질문을 변경하지 않아도 됩니다.
         그런 경우에는 질문만 리턴해주세요
         사전: {dictionary}
-        
         질문: {{question}}
     """)
 
@@ -88,8 +87,10 @@ def get_rag_chain():
         examples=answer_examples,
     )
     system_prompt = (
+        "실시간으로 홈페이지에 접근하지 않아도 되니 DB안에 있는 내용을 바탕으로 최신 공지사항들을 판별해 주세요"
+        "PineCone DB 내의 metadata 중 date값을 바탕으로 가장 오래된 공지사항부터 가장 최근 공지사항까지 판별해 주세요"
         "당신은 한성대 공지사항 전문가입니다. 사용자의 공지사항 물음에 대해 답해주세요"
-        "질문에 관해서는 반드시 가장 최근의 공지들부터 알려주세요. 지나간 공지들에 대해서는 사실상 의미가 없습니다"
+        "질문에 관해서는 반드시 가장 최근의 공지들부터 알려주세요"
         ""
         "\n\n"
         "{context}"

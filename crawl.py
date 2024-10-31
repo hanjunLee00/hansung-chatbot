@@ -1,3 +1,5 @@
+#bs4로 크롤링하여 MySQL DB에 저장 (테이블명 : swpre)
+
 import requests
 from bs4 import BeautifulSoup as bs
 import mysql.connector
@@ -19,6 +21,7 @@ def content_croll(url):
     return content
 
 # Step 1: MySQL에 연결
+# 개인 pc별 수정 필요
 db = mysql.connector.connect(
     host="localhost",        # MySQL 호스트
     user="root",             # MySQL 사용자 이름
@@ -30,7 +33,7 @@ cursor = db.cursor()
 
 # 테이블이 존재하지 않으면 생성하는 SQL (이미 테이블이 있으면 생략 가능)
 create_table_query = """
-CREATE TABLE IF NOT EXISTS swfree (
+CREATE TABLE IF NOT EXISTS swpre (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255),
     link TEXT,
@@ -81,7 +84,7 @@ for article in articles:
     print(f"Date: {pub_date}")
     
     # Step 3: MySQL 테이블에 제목, 링크, 내용, 날짜 삽입
-    sql = "INSERT INTO swfree (title, link, content, date) VALUES (%s, %s, %s, %s)"
+    sql = "INSERT INTO swpre (title, link, content, date) VALUES (%s, %s, %s, %s)"
     val = (title, link, content, pub_date)
     cursor.execute(sql, val)
     db.commit()  # 변경 사항 저장

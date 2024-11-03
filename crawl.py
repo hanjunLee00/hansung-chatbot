@@ -1,5 +1,3 @@
-#bs4로 크롤링하여 MySQL DB에 저장 (테이블명 : swpre)
-
 import requests
 from bs4 import BeautifulSoup as bs
 import mysql.connector
@@ -7,90 +5,82 @@ import mysql.connector
 # 공지사항 내용을 크롤링하는 함수
 def content_croll(url):
     page = requests.get(url)
-    # BeautifulSoup으로 HTML 파싱
     soup = bs(page.text, 'html.parser')
-    # <div> 태그 내에서 공지사항 내용을 추출 (클래스가 'view-con'인 부분)
     view_con_div = soup.find('div', class_='view-con')
     
-    # 내용 추출
+    content = ""
+    image_url = None
     if view_con_div:
         content = view_con_div.get_text(strip=True)
+        
+        # 이미지 URL을 찾기 (content와 상관없이 이미지 URL을 추출)
+        image_tag = view_con_div.find('img')
+        if image_tag and 'src' in image_tag.attrs:
+            image_url = image_tag['src']
+    
     else:
         content = "No content found"
     
-    return content
+    return content, image_url
 
-# Step 1: MySQL에 연결
-# 개인 pc별 수정 필요
+# MySQL 연결 설정
 db = mysql.connector.connect(
-    host="localhost",        # MySQL 호스트
-    user="root",             # MySQL 사용자 이름
-    password="12345678", # MySQL 비밀번호
-    database="crawled"        # 데이터베이스 이름
+    host="localhost",
+    user="root",
+    password="12345678",
+    database="crawled"
 )
-
 cursor = db.cursor()
 
-# 테이블이 존재하지 않으면 생성하는 SQL (이미 테이블이 있으면 생략 가능)
+# 테이블이 없으면 생성
 create_table_query = """
 CREATE TABLE IF NOT EXISTS swpre (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255),
     link TEXT,
-    content TEXT,           -- 공지사항 내용을 저장할 필드 추가
-    date DATETIME           -- 공지사항 날짜를 저장할 필드 추가
+    content TEXT,
+    image TEXT,
+    date DATETIME
 )
 """
 cursor.execute(create_table_query)
 
-# Step 2: RSS 피드에서 공지사항 제목, 링크, 내용, 날짜 가져오기
-url = 'https://www.hansung.ac.kr/bbs/hansung/143/rssList.do?row=1000'
-page = requests.get(url)
+# 최신 공지사항 페이지 순회
+base_url = 'https://www.hansung.ac.kr/bbs/hansung/143/rssList.do?page={}'
 
-# BeautifulSoup으로 XML 파싱
-soup = bs(page.text, 'xml')
+for page_number in range(1, 92):
+    url = base_url.format(page_number)
+    page = requests.get(url)
+    soup = bs(page.text, 'xml')
+    articles = soup.find_all('item')
+    base_domain = "https://www.hansung.ac.kr"
 
-# <item> 태그 내에서 공지사항 제목과 링크 추출
-articles = soup.find_all('item')
+    for article in articles:
+        title = article.find('title').get_text(strip=True) if article.find('title') else "No Title"
+        link = article.find('link').get_text() if article.find('link') else "No Link"
+        pub_date = article.find('pubDate').get_text(strip=True) if article.find('pubDate') else "No Date"
 
-# 기본 URL 설정 (상대 경로에 사용할 도메인)
-base_url = "https://www.hansung.ac.kr/"
+        if link.startswith("/"):
+            link = f"{base_domain}{link}"
 
-for article in articles:
-    
-    # 공지사항 제목 추출
-    title_tag = article.find('title')
-    title = title_tag.get_text(strip=True) if title_tag else "No Title"
+        content, image_url = content_croll(link)
 
-    # 공지사항 링크 추출 (링크는 상대 경로로 주어짐)
-    link_tag = article.find('link')
-    link = link_tag.get_text() if link_tag else "No Link"
+        # MySQL 테이블에 저장
+        sql = "INSERT INTO swpre (title, link, content, image, date) VALUES (%s, %s, %s, %s, %s)"
+        val = (title, link, content, image_url, pub_date)
+        cursor.execute(sql, val)
+        db.commit()
 
-    # 공지사항 날짜 추출
-    pub_date_tag = article.find('pubDate')
-    pub_date = pub_date_tag.get_text(strip=True) if pub_date_tag else "No Date"
-
-    # 상대 경로를 절대 경로로 변환
-    if link.startswith("/"):
-        link = base_url + link[1:]
-    
-    # 공지사항 내용 크롤링
-    content = content_croll(link)
-
-    # 제목, 링크, 내용 및 날짜 출력 (확인용)
-    print(f"title: {title}")
-    print(f"Link: {link}")
-    print(f"Content: {content}")
-    print(f"Date: {pub_date}")
-    
-    # Step 3: MySQL 테이블에 제목, 링크, 내용, 날짜 삽입
-    sql = "INSERT INTO swpre (title, link, content, date) VALUES (%s, %s, %s, %s)"
-    val = (title, link, content, pub_date)
-    cursor.execute(sql, val)
-    db.commit()  # 변경 사항 저장
+        # 저장된 데이터 출력
+        print(f"제목: {title}")
+        print(f"링크: {link}")
+        print(f"내용: {content[:100]}...")  # 내용의 앞 100자만 출력
+        print(f"이미지 URL: {image_url}")
+        print(f"게시 날짜: {pub_date}")
+        print("-" * 40)  # 구분선 출력
 
 # MySQL 연결 종료
 cursor.close()
 db.close()
 
-print("모든 공지사항 제목, 링크, 내용, 날짜가 성공적으로 저장되었습니다.")
+print("모든 공지사항이 성공적으로 저장되었습니다.")

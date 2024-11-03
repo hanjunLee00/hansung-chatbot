@@ -1,6 +1,7 @@
 import mysql.connector
 from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
+from langchain_chroma import Chroma
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -29,7 +30,7 @@ def crawled_data_to_array():
     return rows
 
 # Step 3: 메타데이터와 함께 임베딩 생성 및 저장
-def store_array_to_PCVS():
+def store_array_to_vector_db():
     embedding = OpenAIEmbeddings(model='text-embedding-3-large')
     index_name = 'crawled-db-ver2'
 
@@ -43,9 +44,8 @@ def store_array_to_PCVS():
 
     # 문서를 Pinecone에 저장합니다.
     database = PineconeVectorStore.from_documents(documents, embedding, index_name=index_name)
-    print(f"{len(documents)} documents stored in Pinecone.")
 
-store_array_to_PCVS()
+store_array_to_vector_db()
 
 cursor.close()
 db.close()

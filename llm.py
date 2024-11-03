@@ -22,7 +22,7 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
         store[session_id] = ChatMessageHistory()
     return store[session_id]
 
-# 임베딩 모델 설정하여 PineCone DB에서 정보 학습 (임계값 k = 3)
+# 임베딩 모델 설정하여 PineCone DB에서 정보 검색 (임계값 k = 3)
 def get_retriever():
     embedding = OpenAIEmbeddings(model='text-embedding-3-large')
     index_name = 'crawled-db-ver2'
@@ -96,6 +96,9 @@ def get_rag_chain():
         "모든 질문은 반드시 date 기준으로 최신 정보들을 바탕으로 답변해주세요"
         "공지사항에 대해 알려줄 때에는 Title:, 그리고 date:정보를 빼고 내용과 날짜만 알려주세요"
         "반드시 답변할 때에는 습득한 원본 URL을 링크로 추가하여 답변과 함께 제시해주세요"
+        "현재 학기는 24학년도 2학기 입니다. 답변할 때 이를 기준으로 다음학기, 이전학기, 현재학기를 계산해주세요."
+        "참고로 다음학기는 25학년도 1학기, 이전 학기는 24학년도 1학기입니다."
+        "이번 방학은 2학기 종강 이후 있을 겨울 방학입니다."
         "\n\n"
         "{context}"
     )

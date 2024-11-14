@@ -70,6 +70,16 @@ def register_user(username, password, department, student_id):
     else:
         st.error("데이터베이스 연결에 실패했습니다.")
 
+# 학부 및 학과 데이터
+departments = {
+    "크리에이티브인문예술대학": ["크리에이티브 인문학부", "예술학부"],
+    "미래융합사회과학대학": ["사회과학부"],
+    "디자인대학": ["글로벌패션산업학부", "ICT디자인학부", "뷰티디자인매니지먼트학과"],
+    "IT공과대학": ["컴퓨터공학부", "기계전자공학부", "IT융합공학부", "산업시스템공학부", "스마트제조혁신컨설팅학과"],
+    "창의융합대학": ["상상력인재학부", "문학문화콘텐츠학과", "AI응용학과", "융합보안학과", "미래모빌리티학과"],
+    "미래플러스대학": ["융합행정학과", "호텔외식경영학과", "뷰티디자인학과", "비즈니스컨설팅학과", "ICT융합디자인학과", "미래인재학부"]
+}
+
 # Streamlit 앱 구성
 def main():
     st.markdown("<h1 style='text-align: center; color: #4B7BE5;'>📚 SchoolCatch</h1>", unsafe_allow_html=True)
@@ -107,13 +117,21 @@ def main():
         with col2:
             username = st.text_input("아이디", placeholder="아이디를 입력하세요", key="register_username")
             password = st.text_input("비밀번호", type="password", placeholder="비밀번호를 입력하세요", key="register_password")
-            department = st.text_input("학과", placeholder="학과를 입력하세요", key="register_department")
+            
+            # 학부 선택
+            main_category = st.selectbox("학부 선택", list(departments.keys()), key="main_category")
+            # 학과 선택
+            if main_category:
+                sub_category = st.selectbox("학과 선택", departments[main_category], key="sub_category")
+            else:
+                sub_category = ""
+
             student_id = st.text_input("학번", placeholder="학번을 입력하세요", key="register_student_id")
 
             if st.button("회원가입", help="회원가입 버튼을 눌러주세요"):
-                if username and password and department and student_id:
+                if username and password and main_category and sub_category and student_id:
                     # 사용자 등록 및 중복 확인
-                    register_user(username, password, department, student_id)
+                    register_user(username, password, sub_category, student_id)
                 else:
                     st.error("모든 정보를 입력해 주세요.")
 

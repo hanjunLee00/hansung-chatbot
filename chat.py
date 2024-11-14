@@ -20,7 +20,6 @@ for message in st.session_state.message_list:
 
 #자주 묻는 질문 등 간단한 UI 추가할 부분
 
-
 # 유저 메세지를 입력받고 ai 답변을 받아와 출력
 if user_question := st.chat_input(placeholder="한성대에 관련된 궁금한 내용들을 말씀해주세요!"):
     with st.chat_message("user"):

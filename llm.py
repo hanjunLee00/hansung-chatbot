@@ -30,11 +30,12 @@ def get_retriever():
     retriever = database.as_retriever(search_kwargs={'k': 3})
     return retriever
 
-# llm, retriever 
+# Pinecone 정보 검색 결과 + 채팅 히스토리 Retriever  
 def get_history_retriever():
     llm = get_llm()
     retriever = get_retriever()
     
+    # Langchain 기본 제공 채팅 기록 관리 prompt
     contextualize_q_system_prompt = (
         "Given a chat history and the latest user question "
         "which might reference context in the chat history, "
@@ -58,7 +59,7 @@ def get_history_retriever():
 
 
 #llm 모델 선정
-def get_llm(model='gpt-4o'):
+def get_llm(model='gpt-4o-mini'):
     llm = ChatOpenAI(model=model)
     return llm
 
@@ -81,16 +82,20 @@ def get_dictionary_chain():
 # RAG 채인 생성
 def get_rag_chain():
     llm = get_llm()
+    #채팅 예시 보여주기 (by. ChatPromptTemplate)
     example_prompt = ChatPromptTemplate.from_messages(
         [
             ("human", "{input}"),
             ("ai", "{answer}"),
         ]
     )
+    #사전 입력 기반 답변 생성 채팅 형식은 example_prompt, 사전 데이터 참조는 answer_examples
     few_shot_prompt = FewShotChatMessagePromptTemplate(
+        # config.py의 example_prompt 참조
         example_prompt=example_prompt,
         examples=answer_examples,
     )
+    #사전 설정 prompt => 스쿨캐치만의 사전 정보 입력
     system_prompt = (
         "물어보는 모든 질문에 대해서는 반드시 한성대 공지 정보를 바탕으로 답변해주세요"
         "모든 질문은 반드시 date 기준으로 최신 정보들을 바탕으로 답변해주세요"
@@ -103,6 +108,7 @@ def get_rag_chain():
         "{context}"
     )
 
+    #채팅 화면에 최종적으로 모든 prompt 예시 학습하기
     qa_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", system_prompt),
@@ -111,30 +117,36 @@ def get_rag_chain():
             ("human", "{input}"),
         ]
     )
+    #Retriever 가져오기 (최종 Retriever => get_retriever가 담긴 history_aware_retriever)
     history_aware_retriever = get_history_retriever()
+    #llm 모델과 qa_prompt를 엮어 새로운 Chain 생성 (qa_prompt는 최종 Prompt임)
     question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
 
+    # 채팅 검색 Retriever + question_answer_chain 을 만들어 Chain 생성 (최종 Retrieval + 최종 Prompt를 엮어 생성된 Chain)
     rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
     
+    #get_rag_chain 이 생성하는 최종 Chain
     conversational_rag_chain = RunnableWithMessageHistory(
-        rag_chain,
-        get_session_history,
+        rag_chain, #최종 전 Chain
+        get_session_history, #대화 기록 반환
         input_messages_key="input",
-        history_messages_key="chat_history",
+        history_messages_key="chat_history", 
         output_messages_key="answer",
-    ).pick('answer')
+    ).pick('answer') #answer 값만 받아오기
     
     return conversational_rag_chain
-
+ 
 # 생성된 체인을 바탕으로 ai 답변 생성
 def get_ai_response(user_message):
     dictionary_chain = get_dictionary_chain()
     rag_chain = get_rag_chain()
-    tax_chain = {"input": dictionary_chain} | rag_chain
-    ai_response = tax_chain.stream(
+    pre_chain = {"input": dictionary_chain} | rag_chain
+    ai_response = pre_chain.stream(
         {
             "question": user_message
         },
+        #"configurable" 키를 사용하여 세션 ID를 "abc123"으로 설정하고 있습니다.
+        # 이 세션 ID는 대화 기록을 관리하는 데 사용되며, 각 사용자 세션을 구분하는 데 도움이 됩니다.
         config={
             "configurable": {"session_id": "abc123"}
         },

@@ -1,6 +1,7 @@
 import mysql.connector
 from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
+from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -37,12 +38,15 @@ def store_array_to_vector_db():
     documents = []
     for id, title, link, content, pub_date in rows:
         # 메타데이터를 포함하여 문서 내용을 생성합니다.
-        combined_content = f"Title: {title}\nLink: {link}\nDate: {pub_date}\nContent: {content}"
-        metadata = {'title': title, 'link': link, 'date': pub_date}
+        formatted_date = datetime.strptime(str(pub_date), "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
+        combined_content = f"Title: {title}\nLink: {link}\nDate: {formatted_date}\nContent: {content}"
+        metadata = {'title': title, 'link': link, 'date': formatted_date}
         documents.append(Document(combined_content, metadata, id=str(id)))
 
     # 문서를 Pinecone에 저장합니다.
     database = PineconeVectorStore.from_documents(documents, embedding, index_name=index_name)
+
+    print(f"{len(documents)}개의 문서가 Pinecone에 업로드되었습니다.")
 
 store_array_to_vector_db()
 

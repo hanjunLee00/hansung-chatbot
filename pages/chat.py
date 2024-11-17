@@ -121,11 +121,12 @@ if st.session_state.theme == "다크 모드":
             .notice-item {
                 background-color : #333;
             }
-            .st-emotion-cache-1r4qj8v { /* 최근공지사항 글씨 색 */
-                color : white;
-            }
             .recent_notice {
                 background-color : #333;
+                color : white;
+            }
+            .st-emotion-cache-uuorpk{
+                color : #b1b1b1;
             }
         </style>
     """, unsafe_allow_html=True)

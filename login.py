@@ -3,6 +3,12 @@ import mysql.connector
 from mysql.connector import Error
 import subprocess
 
+if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
+    st.set_page_config(page_title="로그인 페이지", layout="wide", initial_sidebar_state="collapsed")
+else:
+    st.set_page_config(page_title="Chat 페이지", layout="wide", initial_sidebar_state="expanded")
+
+
 # 데이터베이스 연결 함수
 def create_connection():
     try:
@@ -103,7 +109,10 @@ def main():
                 user = authenticate_user(username, password)
                 if user:
                     st.success(f"환영합니다, {user['username']}님!")
-                    subprocess.run(["streamlit", "run", "chat.py"])  # chat.py 실행
+                    st.session_state.logged_in = True
+                    st.session_state.user = user
+                    st.session_state.department = user['department']  # 부서 정보 저장
+                    st.switch_page("./pages/chat.py")  # chat.py 실행
                 else:
                     st.error("잘못된 사용자 이름 또는 비밀번호입니다.")
 

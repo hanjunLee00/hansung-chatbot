@@ -65,8 +65,8 @@ if st.session_state.theme == "다크 모드":
             .stApp { 
                 background-color: #0f0f0f;
             }
-             h1, h3 {
-                color: #ffffff !important;
+             h1, h3, h5{
+                color: white !important;
             }
             .stButton>button {
                 background-color: #333;  /* 다크 모드 버튼 배경 */
@@ -100,6 +100,10 @@ if st.session_state.theme == "다크 모드":
                 color: #f5f5f5;
                 padding: 10px;
             }
+            .faq-content {
+                background-color : #222222;
+                color: #ffffff;
+            }
             .stButton>button:hover { /* 버튼들 호버색*/
                 background-color: #555555;
             }
@@ -112,10 +116,10 @@ if st.session_state.theme == "다크 모드":
             .st-emotion-cache-1flajlm{ /* 질답 글자색 */
                 color : white;
             }
-            .st-d1 { /* 텍스트창 */
-                background-color: #444444;
+            .stChatInput { /* 택스트창 */
+                background-color : #444444;
             }
-            .st-d1::placeholder {
+            .stChatInput::placeholder {
                 color : #9c9c9c;
             }
             .notice-item {
@@ -124,9 +128,6 @@ if st.session_state.theme == "다크 모드":
             .recent_notice {
                 background-color : #333;
                 color : white;
-            }
-            .st-emotion-cache-uuorpk{
-                color : #b1b1b1;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -552,12 +553,10 @@ for button_text, is_clicked in st.session_state.faq_buttons.items():
 st.markdown("""
     <style>
     .faq-content {
-        background-color: #222222;
         padding: 20px;
         margin-top: 20px;
         border-radius: 12px;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-        color: #ffffff;
         font-size: 1.1em;
         line-height: 1.6;
     }
@@ -642,3 +641,4 @@ if user_question := st.chat_input(placeholder="한성대에 관련된 궁금한 
         with st.chat_message("ai"):
             ai_message = st.write_stream(ai_response)
         st.session_state.message_list.append({"role": "ai", "content": ai_message})
+

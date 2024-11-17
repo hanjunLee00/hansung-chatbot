@@ -2,74 +2,197 @@ from dotenv import load_dotenv
 import streamlit as st
 from llm import get_ai_response
 from PIL import Image
-import mysql.connector
-from mysql.connector import Error
+import time
+from datetime import datetime
+import mysql.connector  # 공지사항 관리를 위한 데이터베이스 사용
 
+# MySQL 연결 설정
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="12345678",
+    database="crawled"
+)
+cursor = db.cursor()
 
+def get_recent_notices(limit=3):
+    cursor.execute("SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT %s", (limit,))
+    return cursor.fetchall()
+
+def get_recommended_notices(department):
+    cursor = db.cursor(dictionary=True)
+    query = """
+        SELECT title, link, date 
+        FROM swpre 
+        WHERE content LIKE %s 
+        ORDER BY date DESC 
+        LIMIT 3
+    """
+    cursor.execute(query, (f"%{department}%",))  # 학과와 관련된 공지사항 검색
+    notices = cursor.fetchall()
+    cursor.close()
+    return notices
 
 icon_image = Image.open("./hansungbu.png")
-
-# 데이터베이스 연결 함수
-def create_connection():
-    try:
-        connection = mysql.connector.connect(
-            host="localhost",  # DB 호스트 주소
-            user="root",  # DB 사용자 이름
-            password="12345678",  # DB 비밀번호
-            database="crawled"  # 사용할 데이터베이스 이름
-        )
-        if connection.is_connected():
-            return connection
-    except Error as e:
-        st.error(f"Error while connecting to MySQL: {e}")
-        return None
-
-# 추천 공지사항 가져오기 함수
-def get_recommended_notices(department):
-    connection = create_connection()
-    if connection:
-        cursor = connection.cursor(dictionary=True)
-        query = """
-            SELECT title, link, date 
-            FROM swpre 
-            WHERE content LIKE %s 
-            ORDER BY date DESC 
-            LIMIT 3
-        """
-        cursor.execute(query, (f"%{department}%",))  # 학과와 관련된 공지사항 검색
-        notices = cursor.fetchall()
-        cursor.close()
-        connection.close()
-        return notices
-    return []
 
 # 사용자 지정 아이콘으로 페이지 구성 설정
 st.set_page_config(page_title="한성대학교 챗봇", page_icon=icon_image)
 
-# 언어 선택 기능 추가
+# 탭기능 - 언어선택
 st.sidebar.title("언어 선택 / Language Selection")
 language = st.sidebar.radio("Choose Language", ('한국어', 'English'))
 
-# User Guide Toggle
-st.sidebar.subheader("사용자 안내서")
+if 'theme' not in st.session_state:
+    st.session_state.theme = "라이트 모드"  # 기본값을 라이트 모드로 설정
+
+# Sidebar 테마 설정
+st.sidebar.subheader("테마 설정")
+theme = st.sidebar.radio("테마 선택", ["다크 모드", "라이트 모드"], key="theme_selector")
+
+# 테마가 변경되면 session_state에 반영
+if theme != st.session_state.theme:
+    st.session_state.theme = theme
+
+# 테마에 맞는 CSS 스타일 적용
+if st.session_state.theme == "다크 모드":
+    st.markdown("""
+        <style>
+            
+            body {
+                background-color: #0f0f0f;  /* 다크 모드 배경 */
+                color: white !important;
+            }
+            .stApp { 
+                background-color: #0f0f0f;
+            }
+             h1, h3 {
+                color: #ffffff !important;
+            }
+            .stButton>button {
+                background-color: #333;  /* 다크 모드 버튼 배경 */
+                color: white;  /* 다크 모드 버튼 텍스트 */
+            }
+            .stSidebar {/* 다크 모드 사이드바 배경 및 중간크기 글씨 색*/
+                background-color : #212121;
+                color : white;
+            }
+            .st-bc { /* 라디오바 글자색 */
+                color : #9f9f9f;
+            }
+            .st-emotion-cache-ue6h4q{ /* 라디오바 위 설명란 글자색 */
+                color : #b1b1b1;
+            }
+            .st-emotion-cache-128upt6 { /* 메인 하단 색상 */
+                background-color : #0f0f0f;
+            }
+            .st-emotion-cache-12fmjuu{ /* 메인 상단 색상 */
+                background-color : #0f0f0f;
+                color : white;
+            }
+            .st-emotion-cache-uuorpk {
+                color : #b1b1b1;
+            }
+            .faq-section {
+                background-color: #1c1c1c;
+            }
+            .faq-title {
+                font-size: 18px;
+                color: #f5f5f5;
+                padding: 10px;
+            }
+            .stButton>button:hover { /* 버튼들 호버색*/
+                background-color: #555555;
+            }
+            .st-emotion-cache-1c7y2kd { /* 질문자 메시지 스타일 */
+                background-color : #7a7a7a;
+            }
+            .st-emotion-cache-4oy321{ /* 답변자 메세지 스타일 */
+                background-color : #444444;
+            }
+            .st-emotion-cache-1flajlm{ /* 질답 글자색 */
+                color : white;
+            }
+            .st-d1 { /* 텍스트창 */
+                background-color: #444444;
+            }
+            .st-d1::placeholder {
+                color : #9c9c9c;
+            }
+            .notice-item {
+                background-color : #333;
+            }
+            .st-emotion-cache-1r4qj8v { /* 최근공지사항 글씨 색 */
+                color : white;
+            }
+            .recent_notice {
+                background-color : #333;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+else:  # 라이트 모드
+    st.markdown("""
+        <style>
+            body {
+                background-color: #ffffff;  /* 라이트 모드 배경 */
+                color: #000000 !important;
+            }
+            .stButton>button {
+                background-color: #f0f0f0;  /* 라이트 모드 버튼 배경 */
+                color: black;  /* 라이트 모드 버튼 텍스트 */
+            }
+            .stButton>button:hover { /* 버튼들 호버색*/
+                background-color: white;
+            }
+            .faq-section {
+                background-color: #f9f9f9;
+            }
+            .faq-title {
+                font-size: 18px;
+                color: #333;
+                padding: 10px;
+            }
+            .st-emotion-cache-1c7y2kd { /* 질문자 메시지 스타일 */
+                background-color : #f9f9f9;
+            }
+            .notice-item {
+                background-color : #f9f9f9;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+# 탭기능 - 사용자 안내서
+st.sidebar.subheader("사용자 안내서" if language == '한국어' else "User Guide")
 if "show_guide" not in st.session_state:
     st.session_state.show_guide = False
 
-if st.sidebar.button("자세히 보기"):
-    st.session_state.show_guide = not st.session_state.show_guide  # Toggle visibility
+if st.sidebar.button("자세히 보기" if language == '한국어' else "View Details"):
+    st.session_state.show_guide = not st.session_state.show_guide  
 
-# Display user guide content based on toggle state
 if st.session_state.show_guide:
-    st.sidebar.markdown("""
-    - **질문을 간결하게 작성하세요**: 명확하고 짧은 질문이 더 정확한 답변을 제공합니다.
-    - **한성대 관련 정보만 제공**: 학업, 캠퍼스, 장학금 등 한성대 관련 정보에 집중되어 있습니다.
-    """)
+    if language == '한국어':
+        st.sidebar.markdown("""
+        - **질문을 간결하게 작성하세요**: 명확하고 짧은 질문이 더 정확한 답변을 제공합니다.
+        - **한성대 관련 정보만 제공**: 학업, 캠퍼스, 장학금 등 한성대 관련 정보에 집중되어 있습니다.
+        """)
+    else:
+        st.sidebar.markdown("""
+        - **Ask concise questions**: Clear and short questions lead to more accurate answers.
+        - **Information related to Hansung University only**: Focuses on academics, campus, scholarships, etc., relevant to Hansung University.
+        """)
 
-# 에브리타임 바로가기 버튼 추가
-st.sidebar.subheader("한성대학교 에브리타임 바로가기")
-if st.sidebar.button("한성대학교 에브리타임 접속"):
-    st.sidebar.markdown("[에브리타임 바로가기](https://hansung.everytime.kr/)", unsafe_allow_html=True) 
+# 탭기능 - 에브리타임 바로가기
+st.sidebar.subheader("한성대학교 에브리타임 바로가기" if language == '한국어' else "Hansung University Everytime Shortcut")
+if "show_everytime" not in st.session_state:
+    st.session_state.show_everytime = False
 
+if st.sidebar.button("한성대학교 에브리타임" if language == '한국어' else "Hansung University Everytime", key="everytime_button"):
+    st.session_state.show_everytime = not st.session_state.show_everytime  
+
+if st.session_state.show_everytime:
+    st.sidebar.markdown(
+        "[에브리타임 바로가기](https://hansung.everytime.kr/)" if language == '한국어' else "[Everytime Shortcut](https://hansung.everytime.kr/)",
+        unsafe_allow_html=True
+    )
 title_icon = Image.open("./hansungbu.png")
 
 # 언어에 따라 타이틀과 캡션을 설정
@@ -77,40 +200,153 @@ if language == '한국어':
     title_text = "한성대학교 챗봇"
     caption = "한성대에 관련된 모든 것을 답해드립니다!"
 else:
-    title_text = "Hansung University Chatbot"
+    title_text = "School Catch"
     caption = "Get answers to everything related to Hansung University!"
 
-st.image(title_icon, width=200)  # 이미지 크기는 필요에 따라 조절
-st.title(title_text)
-st.caption(caption)
+    
+# 챗봇 이미지와 최근공지사항 버튼 
+with st.container():
+    col1, col2 = st.columns([1, 1])  
+
+    # 왼쪽 컬럼에 이미지와 타이틀 표시
+    with col1:
+        st.image(title_icon, width=200)  
+        st.title(title_text)
+        st.caption(caption)
+
+with col2:
+    if "show_recent_notices" not in st.session_state:
+        st.session_state.show_recent_notices = False
+
+    button_text = "📢 최근 공지사항 보기" if language == '한국어' else "📢 View Recent Notices"
+    
+    if st.button(button_text):
+        st.session_state.show_recent_notices = not st.session_state.show_recent_notices
+
+    if st.session_state.show_recent_notices:
+        st.markdown('<div class="recent-notices" style="max-height: 400px; overflow-y: auto;">', unsafe_allow_html=True)
+
+        recent_notices = get_recent_notices()
+        if recent_notices:
+            for notice in recent_notices:
+                title, link, date = notice
+                if isinstance(date, str):
+                    date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+                formatted_date = date.strftime("%Y년 %m월 %d일") if language == '한국어' else date.strftime("%B %d, %Y")
+
+                # 공지사항 카드 표시
+                st.markdown(
+                    f"""
+                    <div class = "recent_notice" style='
+                        border: 1px solid #ddd; 
+                        border-radius: 8px; 
+                        padding: 10px; 
+                        margin-bottom: 12px; 
+                        width: 100%;
+                    '>
+                        <h5 style='margin: 0; font-size: 1em; text-align: center;'>{title}</h5>
+                        <p style='margin: 8px 0; font-size: 0.8em; text-align: center;'>{formatted_date}</p>
+                        <a href='{link}' target='_blank' style='
+                            text-decoration: none; 
+                            color: white; 
+                            background-color: #007BFF; 
+                            padding: 6px 10px; 
+                            border-radius: 4px; 
+                            font-size: 0.8em; 
+                            display: block; 
+                            text-align: center;
+                        '>{'공지 보기' if language == '한국어' else 'View Notice'}</a>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+        else:
+            no_notice_message = "최근 공지사항이 없습니다." if language == '한국어' else "No recent notices available."
+            st.info(no_notice_message)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 load_dotenv()
 
-# Initialize session state to store messages
+
 if 'message_list' not in st.session_state:
     st.session_state.message_list = []
 
-# CSS Styling
+# 자주 찾는 질문 버튼 스타일링
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap');
-    body { font-family: 'Roboto', sans-serif; color: #f0f0f0; background-color: #2b2b2b; }
-    .faq-section { background-color: #333333; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); margin-bottom: 20px; }
-    .faq-title { font-family: 'Montserrat', sans-serif; font-size: 1.3em; font-weight: 700; color: #ffffff; margin-bottom: 15px; text-align: center; }
-    .stButton>button { font-family: 'Roboto', sans-serif; width: 100%; padding: 12px; border-radius: 8px; background-color: #444444; color: #e0e0e0; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4); border: 1px solid #555555; transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s ease; }
-    .stButton>button:hover { background-color: #555555; box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2); transform: scale(1.05); }
-    .chat-message-user { background-color: #3a3a3a; color: #ffffff; padding: 12px 18px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-    .chat-message-bot { background-color: #4b4b4b; color: #e0e0e0; padding: 12px 18px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    /* 기본 설정 */
+    body {
+        font-family: 'Roboto', sans-serif;
+    }
+
+    /* FAQ 섹션 스타일 */
+    .faq-section {
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        margin-bottom: 20px;
+    }
+    
+    .faq-title {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 1.3em;
+        font-weight: 700;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    
+    /* 버튼 스타일 및 애니메이션 */
+    .stButton>button {
+        font-family: 'Roboto', sans-serif;
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+        border: 1px solid #555555;
+        transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s ease;
+    }
+    
+    .stButton>button:hover {
+        box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+    }
+    
+    /* 채팅 메시지 스타일 */
+    .stChatMessage{
+        padding: 12px 18px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+        .faq-section {
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .faq-title {
+            font-size: 1.1em;
+        }
+        
+        .stButton>button {
+            padding: 10px;
+            font-size: 0.9em;
+        }
+    }
+
     </style>
 """, unsafe_allow_html=True)
 
-# Sticky FAQ section with buttons
+
 with st.container():
     st.markdown('<div class="faq-section">', unsafe_allow_html=True)
     st.markdown('<div class="faq-title">📌 자주 질문하는 정보</div>', unsafe_allow_html=True)
     col1, col2, col3, col4 = st.columns(4)
 
-    # FAQ 버튼 텍스트와 내용을 설정
+    # 자주 질문하는 정보 버튼 클릭 시 정보들
     faq_content = {
         '한국어': {
             "🎓 장학금": """
@@ -269,32 +505,23 @@ For detailed tuition fees and payment guidance, please refer to [here](https://w
         }
     }
 
-# FAQ 버튼 상태 초기화
 if "faq_buttons" not in st.session_state:
-    # 현재 언어에 따라 FAQ 버튼 초기화
     if language == '한국어':
         st.session_state.faq_buttons = {key: False for key in faq_content['한국어'].keys()}
     else:
         st.session_state.faq_buttons = {key: False for key in faq_content['English'].keys()}
 
-# FAQ 버튼 클릭 시 토글 상태 변경
-for i, (button_text, content) in enumerate(faq_content[language].items()):  # 'language'에 따라 키와 내용을 선택
+for i, (button_text, content) in enumerate(faq_content[language].items()):  
     with [col1, col2, col3, col4][i]:
-        # 안전하게 버튼 상태를 가져오기
         button_clicked = st.session_state.faq_buttons.get(button_text, False)
         if st.button(button_text, key=f"button_{button_text}"):
-            # 버튼 상태 토글
             st.session_state.faq_buttons[button_text] = not button_clicked
-            # 다른 버튼 상태를 False로 초기화
             for key in st.session_state.faq_buttons:
                 if key != button_text:
                     st.session_state.faq_buttons[key] = False
 
-# 선택된 내용 화면에 표시
-# 선택된 내용 화면에 표시
 for button_text, is_clicked in st.session_state.faq_buttons.items():
     if is_clicked:
-        # 언어에 따라 적절한 키로 매핑
         faq_key = button_text if language == '한국어' else {
             "🎓 장학금": "🎓 Scholarships",
             "🗺️ 캠퍼스맵": "🗺️ Campus Map",
@@ -302,29 +529,25 @@ for button_text, is_clicked in st.session_state.faq_buttons.items():
             "📝 시험일정": "📝 Exam Schedule"
         }.get(button_text, button_text)
 
-        # KeyError 방지
         if faq_key not in faq_content[language]:
             st.error("해당 항목에 대한 정보를 찾을 수 없습니다.")
             continue
 
-        # Markdown을 사용한 HTML 렌더링
         st.markdown(
             f"""
             <div class="faq-content">
                 {faq_content[language][faq_key]}
             </div>
             """,
-            unsafe_allow_html=True,  # HTML escape 비활성화
+            unsafe_allow_html=True, 
         )
 
-        # 캠퍼스맵 이미지 추가 (한국어와 영어 둘 다 고려)
         if faq_key in ["🗺️ 캠퍼스맵", "🗺️ Campus Map"]:
             st.image("./map.png", caption="한성대학교 캠퍼스맵", use_column_width=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
 
-# FAQ 섹션 CSS 스타일 추가
 st.markdown("""
     <style>
     .faq-content {
@@ -345,24 +568,55 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
+
 # 사용자 부서 정보가 세션에 저장되어 있으면 해당 정보를 사용해 추천 공지사항을 표시
 if "department" in st.session_state:
     department = st.session_state.department  # 세션에서 부서 정보 가져오기
     recommended_notices = get_recommended_notices(department)  # 부서를 바탕으로 공지사항 가져오기
     
+    st.markdown("""
+    <style>
+        .notice-item {
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .notice-title {
+            font-weight: bold;
+            color: black;
+            text-decoration: none;
+        }
+        .notice-title:hover {
+            text-decoration: underline;
+        }
+        .notice-date {
+            font-size: 0.9em;
+            color: #888888;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
     # 공지사항을 출력
     if recommended_notices:
+
         st.subheader("📌 추천 공지사항")
+        
         for notice in recommended_notices:
-            st.write(f"**{notice['title']}**")
-            st.write(f"날짜: {notice['date']}")
-            st.markdown(f"[상세보기]({notice['link']})")  # 링크로 공지사항 상세보기
+            # 각 공지사항을 박스로 둘러싸기
+            st.markdown(f"""
+            <div class="notice-item">
+                <a href="{notice['link']}" target="_blank" class="notice-title">{notice['title']}</a>
+                <div class="notice-date">날짜: {notice['date']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
     else:
         st.write("추천 공지사항이 없습니다.")
 else:
     st.error("로그인 후 공지사항을 확인할 수 있습니다.")
 
-    
+
 # Display past messages
 for message in st.session_state.message_list:
     if message["role"] == "user":
@@ -374,7 +628,6 @@ for message in st.session_state.message_list:
 
 # Chat input for custom questions
 # 사용자 입력 처리
-
 if user_question := st.chat_input(placeholder="한성대에 관련된 궁금한 내용들을 말씀해주세요!"):
     # 사용자 입력을 채팅에 표시
     with st.chat_message("user"):
@@ -387,4 +640,4 @@ if user_question := st.chat_input(placeholder="한성대에 관련된 궁금한 
         ai_response = get_ai_response(user_question, language=language)  # 언어 인자 전달
         with st.chat_message("ai"):
             ai_message = st.write_stream(ai_response)
-        st.session_state.message_list.append({"role": "ai", "content": ai_message}) 
+        st.session_state.message_list.append({"role": "ai", "content": ai_message})

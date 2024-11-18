@@ -68,6 +68,10 @@ if st.session_state.theme == "다크 모드":
              h1, h3, h5{
                 color: white !important;
             }
+            .custom-caption {
+                color : #b1b1b1;
+                font-size : 0.8rem;
+            }
             .stButton>button {
                 background-color: #333;  /* 다크 모드 버튼 배경 */
                 color: white;  /* 다크 모드 버튼 텍스트 */
@@ -88,9 +92,6 @@ if st.session_state.theme == "다크 모드":
             .st-emotion-cache-12fmjuu{ /* 메인 상단 색상 */
                 background-color : #0f0f0f;
                 color : white;
-            }
-            .st-emotion-cache-uuorpk {
-                color : #b1b1b1;
             }
             .faq-section {
                 background-color: #1c1c1c;
@@ -117,13 +118,11 @@ if st.session_state.theme == "다크 모드":
                 color : white;
             }
             .stChatInput { /* 택스트창 */
-                background-color : #444444;
-            }
-            .stChatInput::placeholder {
-                color : #9c9c9c;
+                background-color : #bdbdbd;
             }
             .notice-item {
                 background-color : #333;
+                color : white;
             }
             .recent_notice {
                 background-color : #333;
@@ -214,7 +213,7 @@ with st.container():
     with col1:
         st.image(title_icon, width=200)  
         st.title(title_text)
-        st.caption(caption)
+        st.markdown(f'<p class="custom-caption">{caption}</p>', unsafe_allow_html=True)
 
 with col2:
     if "show_recent_notices" not in st.session_state:
@@ -281,7 +280,11 @@ st.markdown("""
     body {
         font-family: 'Roboto', sans-serif;
     }
-
+    
+    .st-emotion-cache-zkwxxx { /*간격 축소 */
+        gap : 0.3rem;
+    }
+    
     /* FAQ 섹션 스타일 */
     .faq-section {
         padding: 15px;
@@ -578,43 +581,67 @@ if "department" in st.session_state:
     <style>
         .notice-item {
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
             padding: 15px;
             margin: 10px 0;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        .notice-item:hover {
+            transform: translateY(-5px);
         }
         .notice-title {
-            font-weight: bold;
-            color: black;
             text-decoration: none;
-        }
-        .notice-title:hover {
-            text-decoration: underline;
+            font-size: 1em;
         }
         .notice-date {
             font-size: 0.9em;
-            color: #888888;
         }
     </style>
     """, unsafe_allow_html=True)
 
     # 공지사항을 출력
-    if recommended_notices:
+if recommended_notices:
+    st.subheader("📌 추천 공지사항")
+    
+    for notice in recommended_notices:
+        # 공지사항 제목, 링크, 날짜를 가져옵니다
+        title = notice['title']
+        link = notice['link']
+        date = notice['date']
+        
+        # 날짜 형식 처리
+        if isinstance(date, str):
+            date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+        formatted_date = date.strftime("%Y년 %m월 %d일") if language == '한국어' else date.strftime("%B %d, %Y")
 
-        st.subheader("📌 추천 공지사항")
+        # 각 공지사항을 박스로 둘러싸기
+        st.markdown(f"""
+        <div class="notice-item" style='
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            padding: 10px; 
+            margin-bottom: 21px; 
+            width: 100%;
+        '>
+            <h5 style='margin: 0; font-size: 1em; text-align: center;'>{title}</h5>
+            <p style='margin: 8px 0; font-size: 0.8em; text-align: center;'>{formatted_date}</p>
+            <a href='{link}' target='_blank' style='
+                text-decoration: none; 
+                color: white; 
+                background-color: #007BFF; 
+                padding: 6px 10px; 
+                border-radius: 4px; 
+                font-size: 0.8em; 
+                display: block; 
+                text-align: center;
+                margin-top: 10px;
+            '>{'공지 보기' if language == '한국어' else 'View Notice'}</a>
+        </div>
+        """, unsafe_allow_html=True)
         
-        for notice in recommended_notices:
-            # 각 공지사항을 박스로 둘러싸기
-            st.markdown(f"""
-            <div class="notice-item">
-                <a href="{notice['link']}" target="_blank" class="notice-title">{notice['title']}</a>
-                <div class="notice-date">날짜: {notice['date']}</div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-    else:
-        st.write("추천 공지사항이 없습니다.")
 else:
-    st.error("로그인 후 공지사항을 확인할 수 있습니다.")
+    st.write("추천 공지사항이 없습니다.")
 
 
 # Display past messages

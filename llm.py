@@ -195,14 +195,3 @@ def get_ai_response(user_message, language="한국어"):
         return translated_stream()
 
     return ai_response_stream
-
-# 메인 함수
-async def main():
-    user_message = "최근 공지사항 몇 개 알려줘"
-    response = get_ai_response(user_message)
-    for chunk in response:
-        print(chunk)
-
-# 비동기 실행
-if __name__ == "__main__":
-    asyncio.run(main())

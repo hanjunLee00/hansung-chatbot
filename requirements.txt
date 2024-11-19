@@ -18,8 +18,8 @@ frozenlist==1.5.0  # 버전 수정
 gitdb==4.0.11
 GitPython==3.1.43
 h11==0.14.0
-httpcore==1.0.7  # 버전 수정
-httpx==0.27.2
+httpcore>=0.14.0  # 버전 수정
+httpx>=0.27.0, <1.0.0
 idna==2.10  # 버전 수정
 Jinja2==3.1.4
 jiter==0.6.1
@@ -84,5 +84,5 @@ typing_extensions==4.12.2
 tzdata==2024.2
 urllib3==2.2.3
 yarl==1.16.0  # 버전 수정
-deep-translator==1.11.4
+deep-translator==1.11.4  # DeepTranslator 추가
 mysql-connector-python==9.1.0

@@ -3,8 +3,14 @@ import streamlit as st
 from llm import get_ai_response
 from PIL import Image
 from datetime import datetime
+import pymysql
 
-conn = st.connection("mysql", type='sql')
+conn = pymysql.connect(
+    host="localhost",        # secrets.toml의 host
+    user="readonly_user",    # secrets.toml의 username
+    password="12345678",     # secrets.toml의 password
+    database="crawled",      # secrets.toml의 database
+)
 
 def get_recent_notices(limit=3):
     

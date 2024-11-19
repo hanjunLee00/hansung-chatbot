@@ -2,22 +2,15 @@ from dotenv import load_dotenv
 import streamlit as st
 from llm import get_ai_response
 from PIL import Image
-import time
 from datetime import datetime
-import mysql.connector  # 공지사항 관리를 위한 데이터베이스 사용
 
-# MySQL 연결 설정
-db = mysql.connector.connect(
-    host="localhost",
-    user="readonly_user",
-    password="12345678",
-    database="crawled"
-)
-cursor = db.cursor()
+conn = st.connection("mysql", type='sql')
 
 def get_recent_notices(limit=3):
-    cursor.execute("SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT %s", (limit,))
-    return cursor.fetchall()
+    
+    query = "SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT %s;"
+    notices = conn.query(query, (limit,))
+    return notices
 
 icon_image = Image.open("./hansungbu.png")
 

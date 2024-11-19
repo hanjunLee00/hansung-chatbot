@@ -1,6 +1,7 @@
 langchain-core==0.3.15  # 버전은 사용 중인 버전을 확인 후 수정
 langchain-openai==0.2.3  # 버전은 사용 중인 버전을 확인 후 수정
 langchain-pinecone==0.2.0  # 버전은 사용 중인 버전을 확인 후 수정
+langchain-community==0.3.3
 streamlit==1.39.0  # 버전은 사용 중인 버전을 확인 후 수정
 pymysql==1.1.1     # 버전은 사용 중인 버전을 확인 후 수정
 Pillow==10.4.0              # Pillow 버전 (필요에 따라 수정)

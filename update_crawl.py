@@ -117,7 +117,7 @@ for page_number in range(1, 10):
         print(f"게시 날짜: {pub_date}")
         print("-" * 40)
 
-        content += 1
+        count += 1
 
         # 가장 오래된 새 공지사항 날짜 업데이트
         if oldest_new_date is None or pub_date < oldest_new_date:

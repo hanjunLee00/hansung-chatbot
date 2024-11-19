@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap');
+
+body {
+    font-family: 'Roboto', sans-serif;
+    color: #f0f0f0;
+    background-color: #2b2b2b;
+}
+
+.faq-section {
+    background-color: #333333;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
+}
+
+.faq-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.stButton > button {
+    font-family: 'Roboto', sans-serif;
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    background-color: #444444;
+    color: #e0e0e0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    border: 1px solid #555555;
+    transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s ease;
+}
+
+.stButton > button:hover {
+    background-color: #555555;
+    box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.chat-message-user {
+    background-color: #3a3a3a;
+    color: #ffffff;
+    padding: 12px 18px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.chat-message-bot {
+    background-color: #4b4b4b;
+    color: #e0e0e0;
+    padding: 12px 18px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.faq-content {
+    background-color: #222222;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+    font-size: 1.1em;
+    line-height: 1.6;
+}
+
+.stButton > button[aria-pressed="true"] {
+    background-color: #555555 !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
+    border: 2px solid #888888 !important;
+}

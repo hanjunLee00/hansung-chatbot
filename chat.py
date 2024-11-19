@@ -24,6 +24,10 @@ icon_image = Image.open("./hansungbu.png")
 # 사용자 지정 아이콘으로 페이지 구성 설정
 st.set_page_config(page_title="한성대학교 챗봇", page_icon=icon_image)
 
+# CSS 파일 불러오기
+with open("styles.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 # 탭기능 - 언어선택
 st.sidebar.title("언어 선택 / Language Selection")
 language = st.sidebar.radio("Choose Language", ('한국어', 'English'))
@@ -61,6 +65,7 @@ if st.session_state.show_everytime:
         "[에브리타임 바로가기](https://hansung.everytime.kr/)" if language == '한국어' else "[Everytime Shortcut](https://hansung.everytime.kr/)",
         unsafe_allow_html=True
     )
+
 title_icon = Image.open("./hansungbu.png")
 
 # 언어에 따라 타이틀과 캡션을 설정
@@ -71,7 +76,6 @@ else:
     title_text = "School Catch"
     caption = "Get answers to everything related to Hansung University!"
 
-    
 # 챗봇 이미지와 최근공지사항 버튼 
 with st.container():
     col1, col2 = st.columns([1, 1])  
@@ -135,10 +139,6 @@ with col2:
         st.markdown('</div>', unsafe_allow_html=True)
 
 load_dotenv()
-
-
-if 'message_list' not in st.session_state:
-    st.session_state.message_list = []
 
 # 자주 찾는 질문 버튼 스타일링
 st.markdown("""
@@ -383,6 +383,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+if 'message_list' not in st.session_state:
+    st.session_state.message_list = []
 
 # Display past messages
 for message in st.session_state.message_list:

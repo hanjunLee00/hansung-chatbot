@@ -6,12 +6,13 @@ import subprocess  # subprocess 추가
 def create_connection():
     try:
         connection = pymysql.connect(
-            host="localhost",  # DB 호스트 주소
-            user="root",  # DB 사용자 이름
+            host="127.0.0.1",  # DB 호스트 주소
+            user="readonly_user",  # DB 사용자 이름
             password="12345678",  # DB 비밀번호
             database="crawled"  # 사용할 데이터베이스 이름
         )
-        return connection
+        if connection.is_connected():
+            return connection
     except pymysql.MySQLError as e:
         st.error(f"Error while connecting to MySQL: {e}")
         return None
@@ -20,7 +21,7 @@ def create_connection():
 def authenticate_user(username, password):
     connection = create_connection()
     if connection:
-        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        cursor = connection.cursor(dictionary=True)
         query = "SELECT * FROM users WHERE username = %s AND password = %s"
         cursor.execute(query, (username, password))
         user = cursor.fetchone()

@@ -6,7 +6,7 @@ from datetime import datetime
 import pymysql
 
 conn = pymysql.connect(
-    host="localhost",        # secrets.toml의 host
+    host="127.0.0.1",        # secrets.toml의 host
     user="readonly_user",    # secrets.toml의 username
     password="12345678",     # secrets.toml의 password
     database="crawled",      # secrets.toml의 database

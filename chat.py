@@ -2,12 +2,11 @@ from dotenv import load_dotenv
 import streamlit as st
 from llm import get_ai_response
 from PIL import Image
-import time
 from datetime import datetime
-import mysql.connector  # 공지사항 관리를 위한 데이터베이스 사용
+import pymysql  # 공지사항 관리를 위한 데이터베이스 사용
 
 # MySQL 연결 설정
-db = mysql.connector.connect(
+db = pymysql.connect(
     host="localhost",
     user="readonly_user",
     password="12345678",

@@ -1,6 +1,4 @@
-#실행 날짜 기준 이후 데이터들만 Pinecone에 업로드
-
-import mysql.connector
+import pymysql  # pymysql로 변경
 from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from dotenv import load_dotenv
@@ -15,7 +13,7 @@ class Document:
         self.id = id
 
 # Step 1: MySQL에 연결
-db = mysql.connector.connect(
+db = pymysql.connect(
     host="localhost",        
     user="root",            
     password="12345678",    

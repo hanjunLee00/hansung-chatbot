@@ -1,6 +1,4 @@
-#실행되는 날짜 기준 이후 데이터들만 이미지 => 텍스트 전환
-
-import mysql.connector
+import pymysql  # pymysql로 변경
 import requests
 import io
 import objc
@@ -14,7 +12,7 @@ from datetime import datetime
 load_dotenv()
 
 # Database credentials from environment variables
-db = mysql.connector.connect(
+db = pymysql.connect(
     host="localhost",
     user="root",
     password="12345678",

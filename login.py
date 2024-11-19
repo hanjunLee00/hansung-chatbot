@@ -1,20 +1,18 @@
 import streamlit as st
-import mysql.connector
-from mysql.connector import Error
+import pymysql
 import subprocess  # subprocess 추가
 
 # 데이터베이스 연결 함수
 def create_connection():
     try:
-        connection = mysql.connector.connect(
+        connection = pymysql.connect(
             host="localhost",  # DB 호스트 주소
             user="root",  # DB 사용자 이름
             password="12345678",  # DB 비밀번호
             database="crawled"  # 사용할 데이터베이스 이름
         )
-        if connection.is_connected():
-            return connection
-    except Error as e:
+        return connection
+    except pymysql.MySQLError as e:
         st.error(f"Error while connecting to MySQL: {e}")
         return None
 
@@ -22,7 +20,7 @@ def create_connection():
 def authenticate_user(username, password):
     connection = create_connection()
     if connection:
-        cursor = connection.cursor(dictionary=True)
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
         query = "SELECT * FROM users WHERE username = %s AND password = %s"
         cursor.execute(query, (username, password))
         user = cursor.fetchone()

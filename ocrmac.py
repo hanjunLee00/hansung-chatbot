@@ -1,4 +1,4 @@
-import mysql.connector
+import pymysql  # pymysql로 변경
 import requests
 import io
 import objc
@@ -12,7 +12,7 @@ import os
 load_dotenv()
 
 # Database credentials from environment variables
-db = mysql.connector.connect(
+db = pymysql.connect(
     host="localhost",
     user="root",
     password="12345678",  # 환경변수 활용으로 보안 강화

@@ -1,8 +1,6 @@
-# DB의 date column을 참조하여 가장 최근에 저장된 데이터 이후의 공지들만 크롤링 (하루 단위 아님)
-
 import requests
 from bs4 import BeautifulSoup as bs
-import mysql.connector
+import pymysql  # pymysql로 변경
 from datetime import datetime
 
 # 공지사항 내용을 크롤링하는 함수
@@ -27,7 +25,7 @@ def content_croll(url):
     return content, image_url
 
 # MySQL 연결 설정
-db = mysql.connector.connect(
+db = pymysql.connect(
     host="localhost",
     user="root",
     password="12345678",

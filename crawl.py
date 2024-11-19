@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup as bs
-import mysql.connector
+import pymysql  # pymysql로 변경
 
 # 공지사항 내용을 크롤링하는 함수
 def content_croll(url):
@@ -24,7 +24,7 @@ def content_croll(url):
     return content, image_url
 
 # MySQL 연결 설정
-db = mysql.connector.connect(
+db = pymysql.connect(
     host="localhost",
     user="root",
     password="12345678",

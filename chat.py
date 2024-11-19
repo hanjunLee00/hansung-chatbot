@@ -8,7 +8,7 @@ import mysql.connector  # 공지사항 관리를 위한 데이터베이스 사�
 
 # MySQL 연결 설정
 db = mysql.connector.connect(
-    host="172.30.1.80", #포트 변경해보기
+    host="2wt6nkzpmf7rmdifqp76jn", #포트 변경해보기
     user="readonly_user",
     password="12345678",
     database="crawled"

@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 import mysql.connector  # 공지사항 관리를 위한 데이터베이스 사용
 
-# MySQL 연결 설정
+# MySQL 연결 설정 연결 설정 
 db = mysql.connector.connect(
     host="0.0.0.0",
     user="readonly_user",

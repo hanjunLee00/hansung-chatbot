@@ -9,7 +9,7 @@ import mysql.connector  # 공지사항 관리를 위한 데이터베이스 사�
 # MySQL 연결 설정
 db = mysql.connector.connect(
     host="localhost",
-    user="root",
+    user="readonly_user",
     password="12345678",
     database="crawled"
 )

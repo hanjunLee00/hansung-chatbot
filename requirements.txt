@@ -86,4 +86,3 @@ urllib3==2.2.3
 yarl==1.16.0  # 버전 수정
 deep-translator==1.11.4
 mysql-connector-python==9.1.0
-mysqlclient==2.2.6

@@ -111,11 +111,6 @@ pydantic-settings==2.6.0
 pydeck==0.9.1
 Pygments==2.18.0
 PyMySQL==1.1.1
-pyobjc-core==10.3.1
-pyobjc-framework-Cocoa==10.3.1
-pyobjc-framework-CoreML==10.3.1
-pyobjc-framework-Quartz==10.3.1
-pyobjc-framework-Vision==10.3.1
 PyPika==0.48.9
 pyproject_hooks==1.2.0
 python-dateutil==2.9.0.post0

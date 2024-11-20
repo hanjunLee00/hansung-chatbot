@@ -12,7 +12,7 @@ import streamlit as st
 # 데이터베이스 연결 함수
 def get_db_connection():
     # Streamlit의 SQLConnection 가져오기
-    conn = st.connection("sql")
+    conn = st.connection('mysql', type='sql')
     return conn
 
 # 최근 공지 가져오기

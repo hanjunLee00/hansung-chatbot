@@ -4,22 +4,20 @@ from llm import get_ai_response
 from PIL import Image
 from datetime import datetime
 import pymysql
-
+import pandas as pd
 import logging
 import pymysql
 import streamlit as st
 
 def get_db_connection():
-    conn = st.connection('mysql', type='sql')
-    return conn
+    """Connect to the MySQL database using Streamlit's connection."""
+    return st.connection('mysql', type='sql')
 
 def get_recent_notices(limit=3):
     """Retrieve recent notices from the database."""
     conn = get_db_connection()
-    with conn.cursor() as cursor:
-        query = "SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT %s;"
-        cursor.execute(query, (limit,))
-        notices = cursor.fetchall()
+    query = "SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT %s;"
+    notices = pd.read_sql(query, conn, params=(limit,))
     conn.close()  # 연결 종료
     return notices
     

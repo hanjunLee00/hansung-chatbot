@@ -3,19 +3,31 @@ import streamlit as st
 from llm import get_ai_response
 from PIL import Image
 from datetime import datetime
-import pymysql
+import requests
+from bs4 import BeautifulSoup as bs
 
-conn = pymysql.connect(
-    host="localhost",        # secrets.toml의 host
-    user="readonly_user",    # secrets.toml의 username
-    password="12345678",     # secrets.toml의 password
-    database="crawled",      # secrets.toml의 database
-)
 
+# 최신 3개의 공지사항을 크롤링하는 메소드
 def get_recent_notices(limit=3):
-    
-    query = "SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT %s;"
-    notices = conn.query(query, (limit,))
+    base_url = 'https://www.hansung.ac.kr/bbs/hansung/143/rssList.do?page=1'  # 첫 페이지만 사용
+    notices = []
+
+    page = requests.get(base_url)
+    soup = bs(page.text, 'xml')
+    articles = soup.find_all('item')
+    base_domain = "https://www.hansung.ac.kr"
+
+    for article in articles[:limit]:  # 최신 공지사항 3개만 처리
+        title = article.find('title').get_text(strip=True) if article.find('title') else "No Title"
+        link = article.find('link').get_text() if article.find('link') else "No Link"
+        pub_date = article.find('pubDate').get_text(strip=True) if article.find('pubDate') else "No Date"
+
+        if link.startswith("/"):
+            link = f"{base_domain}{link}"
+
+        # 공지사항 정보를 notices 리스트에 추가
+        notices.append((title, link, pub_date))
+
     return notices
 
 icon_image = Image.open("./hansungbu.png")
@@ -30,6 +42,128 @@ with open("styles.css") as f:
 # 탭기능 - 언어선택
 st.sidebar.title("언어 선택 / Language Selection")
 language = st.sidebar.radio("Choose Language", ('한국어', 'English'))
+
+if 'theme' not in st.session_state:
+    st.session_state.theme = "라이트 모드"  # 기본값을 라이트 모드로 설정
+
+if 'theme' not in st.session_state:
+    st.session_state.theme = "라이트 모드"  # 기본값을 라이트 모드로 설정
+
+# Sidebar 테마 설정
+st.sidebar.subheader("테마 설정")
+theme = st.sidebar.radio("테마 선택", ["다크 모드", "라이트 모드"], key="theme_selector")
+
+# 테마가 변경되면 session_state에 반영
+if theme != st.session_state.theme:
+    st.session_state.theme = theme
+
+# 테마에 맞는 CSS 스타일 적용
+if st.session_state.theme == "다크 모드":
+    st.markdown("""
+        <style>
+            
+            body {
+                background-color: #0f0f0f;  /* 다크 모드 배경 */
+                color: white !important;
+            }
+            .stApp { 
+                background-color: #0f0f0f;
+            }
+             h1, h3 {
+                color: #ffffff !important;
+            }
+            .stButton>button {
+                background-color: #333;  /* 다크 모드 버튼 배경 */
+                color: white;  /* 다크 모드 버튼 텍스트 */
+            }
+            .stSidebar {/* 다크 모드 사이드바 배경 및 중간크기 글씨 색*/
+                background-color : #212121;
+                color : white;
+            }
+            .st-bc { /* 라디오바 글자색 */
+                color : #9f9f9f;
+            }
+            .st-emotion-cache-ue6h4q{ /* 라디오바 위 설명란 글자색 */
+                color : #b1b1b1;
+            }
+            .st-emotion-cache-128upt6 { /* 메인 하단 색상 */
+                background-color : #0f0f0f;
+            }
+            .st-emotion-cache-12fmjuu{ /* 메인 상단 색상 */
+                background-color : #0f0f0f;
+                color : white;
+            }
+            .st-emotion-cache-uuorpk {
+                color : #b1b1b1;
+            }
+            .faq-section {
+                background-color: #1c1c1c;
+            }
+            .faq-title {
+                font-size: 18px;
+                color: #f5f5f5;
+                padding: 10px;
+            }
+            .stButton>button:hover { /* 버튼들 호버색*/
+                background-color: #555555;
+            }
+            .st-emotion-cache-1c7y2kd { /* 질문자 메시지 스타일 */
+                background-color : #7a7a7a;
+            }
+            .st-emotion-cache-4oy321{ /* 답변자 메세지 스타일 */
+                background-color : #444444;
+            }
+            .st-emotion-cache-1flajlm{ /* 질답 글자색 */
+                color : white;
+            }
+            .st-d1 { /* 텍스트창 */
+                background-color: #444444;
+            }
+            .st-d1::placeholder {
+                color : #9c9c9c;
+            }
+            .notice-item {
+                background-color : #333;
+            }
+            .recent_notice {
+                background-color : #333;
+                color : white;
+            }
+            .st-emotion-cache-uuorpk{
+                color : #b1b1b1;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+else:  # 라이트 모드
+    st.markdown("""
+        <style>
+            body {
+                background-color: #ffffff;  /* 라이트 모드 배경 */
+                color: #000000 !important;
+            }
+            .stButton>button {
+                background-color: #f0f0f0;  /* 라이트 모드 버튼 배경 */
+                color: black;  /* 라이트 모드 버튼 텍스트 */
+            }
+            .stButton>button:hover { /* 버튼들 호버색*/
+                background-color: white;
+            }
+            .faq-section {
+                background-color: #f9f9f9;
+            }
+            .faq-title {
+                font-size: 18px;
+                color: #333;
+                padding: 10px;
+            }
+            .st-emotion-cache-1c7y2kd { /* 질문자 메시지 스타일 */
+                background-color : #f9f9f9;
+            }
+            .notice-item {
+                background-color : #f9f9f9;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
 # 탭기능 - 사용자 안내서
 st.sidebar.subheader("사용자 안내서" if language == '한국어' else "User Guide")
@@ -97,13 +231,16 @@ with col2:
     if st.session_state.show_recent_notices:
         st.markdown('<div class="recent-notices" style="max-height: 400px; overflow-y: auto;">', unsafe_allow_html=True)
 
-        recent_notices = get_recent_notices()
+        recent_notices = get_recent_notices()  # 최신 3개의 공지사항 가져오기
         if recent_notices:
             for notice in recent_notices:
-                title, link, date = notice
-                if isinstance(date, str):
-                    date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
-                formatted_date = date.strftime("%Y년 %m월 %d일") if language == '한국어' else date.strftime("%B %d, %Y")
+                title, link, pub_date = notice
+                
+                # 날짜 포맷팅 (pub_date가 문자열인 경우)
+                if isinstance(pub_date, str):
+                    formatted_date = pub_date  # pub_date가 이미 문자열이므로 변환 필요 없음
+                else:
+                    formatted_date = pub_date.strftime("%Y년 %m월 %d일") if language == '한국어' else pub_date.strftime("%B %d, %Y")
 
                 # 공지사항 카드 표시
                 st.markdown(
@@ -116,18 +253,10 @@ with col2:
                         width: 100%; 
                         background-color: #f9f9f9;
                     '>
-                        <h5 style='margin: 0; color: #007BFF; font-size: 1em; text-align: center;'>{title}</h5>
-                        <p style='margin: 8px 0; font-size: 0.8em; color: #555; text-align: center;'>{formatted_date}</p>
-                        <a href='{link}' target='_blank' style='
-                            text-decoration: none; 
-                            color: white; 
-                            background-color: #007BFF; 
-                            padding: 6px 10px; 
-                            border-radius: 4px; 
-                            font-size: 0.8em; 
-                            display: block; 
-                            text-align: center;
-                        '>{'공지 보기' if language == '한국어' else 'View Notice'}</a>
+                        <h5 style='margin: 0; color: #007BFF; font-size: 1em; text-align: center;'>
+                            <a href='{link}' style='text-decoration: none; color: #007BFF;' target='_blank'>{title}</a>
+                        </h5>
+                        <p style='margin: 8px 0; font-size: 0.8em; color: #555; text-align: center;'>게시 날짜: {formatted_date}</p>
                     </div>
                     """,
                     unsafe_allow_html=True
@@ -135,7 +264,9 @@ with col2:
         else:
             no_notice_message = "최근 공지사항이 없습니다." if language == '한국어' else "No recent notices available."
             st.info(no_notice_message)
+
         st.markdown('</div>', unsafe_allow_html=True)
+
 
 load_dotenv()
 

@@ -8,5 +8,5 @@ Pillow==10.4.0              # Pillow 버전 (필요에 따라 수정)
 python-dotenv==1.0.0        # python-dotenv 버전 (필요에 따라 수정)
 langchain==0.3.7
 deep-translator==1.11.4
-mysqlclient == 2.2.6
-SQLAlchemy == 2.0.36
+mysqlclient==2.2.6
+SQLAlchemy==2.0.36

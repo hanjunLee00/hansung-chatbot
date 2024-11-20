@@ -9,16 +9,24 @@ import pymysql
 @st.cache_resource
 def get_db_connection():
     """Connect to the MySQL database using credentials from secrets."""
-    conn = st.connection('mysql')
+    # secrets.toml에서 정보 가져오기
+    conn = pymysql.connect(
+        host=st.secrets["connections.mysql"]["host"],
+        user=st.secrets["connections.mysql"]["username"],
+        password=st.secrets["connections.mysql"]["password"],
+        database=st.secrets["connections.mysql"]["database"],
+        port=st.secrets["connections.mysql"]["port"]
+    )
     return conn
 
 def get_recent_notices(limit=3):
     """Retrieve recent notices from the database."""
     conn = get_db_connection()
-    query = "SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT %s;"
     with conn.cursor() as cursor:
+        query = "SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT %s;"
         cursor.execute(query, (limit,))
         notices = cursor.fetchall()
+    conn.close()  # 연결 종료
     return notices
 
 icon_image = Image.open("./hansungbu.png")

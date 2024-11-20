@@ -11,11 +11,11 @@ def get_db_connection():
     """Connect to the MySQL database using credentials from secrets."""
     # secrets.toml에서 정보 가져오기
     conn = pymysql.connect(
-        host=st.secrets["connections.mysql"]["host"],
-        username=st.secrets["connections.mysql"]["username"],
-        password=st.secrets["connections.mysql"]["password"],
-        database=st.secrets["connections.mysql"]["database"],
-        port=st.secrets["connections.mysql"]["port"]
+        host = "localhost" # 데이터베이스 서버 주소
+        port = 3306 # 포트번호
+        database = "crawled" # 사용하고자 하는 데이터베이스 명
+        username = "readonly_user" # MySQL 사용자명
+        password = "12345678" # 비밀번호
     )
     return conn
 

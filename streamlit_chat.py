@@ -101,14 +101,15 @@ with col2:
         st.markdown('<div class="recent-notices" style="max-height: 400px; overflow-y: auto;">', unsafe_allow_html=True)
 
         recent_notices = get_recent_notices()
-        if recent_notices:
-            for notice in recent_notices:
-                title, link, date = notice
+        if not recent_notices.empty:  # DataFrame 비어있지 않음
+            for index, notice in recent_notices.iterrows():  # DataFrame에서 각 행 반복
+                title = notice['title']
+                link = notice['link']
+                date = notice['date']
                 if isinstance(date, str):
                     date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
                 formatted_date = date.strftime("%Y년 %m월 %d일") if language == '한국어' else date.strftime("%B %d, %Y")
-
-                # 공지사항 카드 표시
+                    # 공지사항 카드 표시
                 st.markdown(
                     f"""
                     <div style='

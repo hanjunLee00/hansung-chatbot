@@ -4,29 +4,31 @@ from llm import get_ai_response
 from PIL import Image
 from datetime import datetime
 import pymysql
+
 import logging
+import pymysql
+import streamlit as st
 
 # 로그 설정
 logging.basicConfig(level=logging.INFO)
 
-# 데이터베이스 연결 함수
 @st.cache_resource
 def get_db_connection():
     """Connect to the MySQL database using credentials from secrets."""
-    logging.info("Trying to connect to the database...")
     try:
         conn = pymysql.connect(
             host="172.30.1.80",  # 데이터베이스 서버 주소
             port=3306,            # 포트번호
             database="crawled",   # 사용하고자 하는 데이터베이스 명
             user="readonly_user",  # MySQL 사용자명
-            password="12345678",   # 비밀번호
+            password="12345678"    # 비밀번호
         )
         logging.info("Database connection successful.")
         return conn
     except pymysql.MySQLError as e:
         logging.error(f"Database connection failed: {e}")
         return None
+
 
 def get_recent_notices(limit=3):
     """Retrieve recent notices from the database."""

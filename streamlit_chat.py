@@ -5,17 +5,20 @@ from PIL import Image
 from datetime import datetime
 import pymysql
 
-conn = pymysql.connect(
-    host="127.0.0.1",        # secrets.toml의 host
-    user="readonly_user",    # secrets.toml의 username
-    password="12345678",     # secrets.toml의 password
-    database="crawled",      # secrets.toml의 database
-)
+# 데이터베이스 연결 함수
+@st.cache_resource
+def get_db_connection():
+    """Connect to the MySQL database using credentials from secrets."""
+    conn = st.connection('mysql')
+    return conn
 
 def get_recent_notices(limit=3):
-    
+    """Retrieve recent notices from the database."""
+    conn = get_db_connection()
     query = "SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT %s;"
-    notices = conn.query(query, (limit,))
+    with conn.cursor() as cursor:
+        cursor.execute(query, (limit,))
+        notices = cursor.fetchall()
     return notices
 
 icon_image = Image.open("./hansungbu.png")

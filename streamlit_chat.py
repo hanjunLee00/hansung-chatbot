@@ -12,7 +12,7 @@ def get_db_connection():
     # secrets.toml에서 정보 가져오기
     conn = pymysql.connect(
         host=st.secrets["connections.mysql"]["host"],
-        user=st.secrets["connections.mysql"]["username"],
+        username=st.secrets["connections.mysql"]["username"],
         password=st.secrets["connections.mysql"]["password"],
         database=st.secrets["connections.mysql"]["database"],
         port=st.secrets["connections.mysql"]["port"]
@@ -28,7 +28,7 @@ def get_recent_notices(limit=3):
         notices = cursor.fetchall()
     conn.close()  # 연결 종료
     return notices
-
+    
 icon_image = Image.open("./hansungbu.png")
 
 # 사용자 지정 아이콘으로 페이지 구성 설정

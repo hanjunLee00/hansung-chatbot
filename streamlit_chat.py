@@ -9,16 +9,22 @@ import logging
 import pymysql
 import streamlit as st
 
+# 데이터베이스 연결 함수
 def get_db_connection():
-    """Connect to the MySQL database using Streamlit's connection."""
-    return st.connection('mysql', type='sql')
+    # Streamlit의 SQLConnection 가져오기
+    conn = st.connection("sql")
+    return conn
 
+# 최근 공지 가져오기
 def get_recent_notices(limit=3):
-    """Retrieve recent notices from the database."""
+    """데이터베이스에서 최근 공지를 가져옵니다."""
     conn = get_db_connection()
-    query = "SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT %s;"
-    notices = pd.read_sql(query, conn, params=(limit,))
-    conn.close()  # 연결 종료
+    query = "SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT :limit"
+    
+    # SQLAlchemy의 연결 객체 사용
+    with conn.session as session:
+        notices = pd.read_sql(query, session.bind, params={"limit": limit})
+    
     return notices
     
 icon_image = Image.open("./hansungbu.png")

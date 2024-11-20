@@ -14,7 +14,7 @@ def get_db_connection():
         host = "localhost", # 데이터베이스 서버 주소
         port = 3306, # 포트번호
         database = "crawled", # 사용하고자 하는 데이터베이스 명
-        username = "readonly_user", # MySQL 사용자명
+        user = "readonly_user", # MySQL 사용자명
         password = "12345678", # 비밀번호
     )
     return conn

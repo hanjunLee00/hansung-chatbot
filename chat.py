@@ -2,13 +2,14 @@ from dotenv import load_dotenv
 import streamlit as st
 from llm import get_ai_response
 from PIL import Image
+import time
 from datetime import datetime
-import pymysql  # 공지사항 관리를 위한 데이터베이스 사용
+import mysql.connector  # 공지사항 관리를 위한 데이터베이스 사용
 
 # MySQL 연결 설정
-db = pymysql.connect(
+db = mysql.connector.connect(
     host="localhost",
-    user="readonly_user",
+    user="root",
     password="12345678",
     database="crawled"
 )
@@ -18,18 +19,147 @@ def get_recent_notices(limit=3):
     cursor.execute("SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT %s", (limit,))
     return cursor.fetchall()
 
+def get_recommended_notices(department):
+    cursor = db.cursor(dictionary=True)
+    query = """
+        SELECT title, link, date 
+        FROM swfree 
+        WHERE content LIKE %s 
+        ORDER BY date DESC 
+        LIMIT 3
+    """
+    cursor.execute(query, (f"%{department}%",))  # 학과와 관련된 공지사항 검색
+    notices = cursor.fetchall()
+    cursor.close()
+    return notices
+
 icon_image = Image.open("./hansungbu.png")
 
 # 사용자 지정 아이콘으로 페이지 구성 설정
 st.set_page_config(page_title="한성대학교 챗봇", page_icon=icon_image)
 
-# CSS 파일 불러오기
-with open("styles.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
 # 탭기능 - 언어선택
 st.sidebar.title("언어 선택 / Language Selection")
 language = st.sidebar.radio("Choose Language", ('한국어', 'English'))
+
+if 'theme' not in st.session_state:
+    st.session_state.theme = "라이트 모드"  # 기본값을 라이트 모드로 설정
+
+# Sidebar 테마 설정
+st.sidebar.subheader("테마 설정")
+theme = st.sidebar.radio("테마 선택", ["다크 모드", "라이트 모드"], key="theme_selector")
+
+# 테마가 변경되면 session_state에 반영
+if theme != st.session_state.theme:
+    st.session_state.theme = theme
+
+# 테마에 맞는 CSS 스타일 적용
+if st.session_state.theme == "다크 모드":
+    st.markdown("""
+        <style>
+            
+            body {
+                background-color: #0f0f0f;  /* 다크 모드 배경 */
+                color: white !important;
+            }
+            .stApp { 
+                background-color: #0f0f0f;
+            }
+             h1, h3, h5{
+                color: white !important;
+            }
+            .custom-caption {
+                color : #b1b1b1;
+                font-size : 0.8rem;
+            }
+            .stButton>button {
+                background-color: #333;  /* 다크 모드 버튼 배경 */
+                color: white;  /* 다크 모드 버튼 텍스트 */
+            }
+            .stSidebar {/* 다크 모드 사이드바 배경 및 중간크기 글씨 색*/
+                background-color : #212121;
+                color : white;
+            }
+            .st-bc { /* 라디오바 글자색 */
+                color : #9f9f9f;
+            }
+            .st-emotion-cache-ue6h4q{ /* 라디오바 위 설명란 글자색 */
+                color : #b1b1b1;
+            }
+            .st-emotion-cache-128upt6 { /* 메인 하단 색상 */
+                background-color : #0f0f0f;
+            }
+            .st-emotion-cache-12fmjuu{ /* 메인 상단 색상 */
+                background-color : #0f0f0f;
+                color : white;
+            }
+            .faq-section {
+                background-color: #1c1c1c;
+            }
+            .faq-title {
+                font-size: 18px;
+                color: #f5f5f5;
+                padding: 10px;
+            }
+            .faq-content {
+                background-color : #222222;
+                color: #ffffff;
+            }
+            .stButton>button:hover { /* 버튼들 호버색*/
+                background-color: #555555;
+            }
+            .st-emotion-cache-1c7y2kd { /* 질문자 메시지 스타일 */
+                background-color : #7a7a7a;
+            }
+            .st-emotion-cache-4oy321{ /* 답변자 메세지 스타일 */
+                background-color : #444444;
+            }
+            .st-emotion-cache-1flajlm{ /* 질답 글자색 */
+                color : white;
+            }
+            .stChatInput { /* 택스트창 */
+                background-color : #bdbdbd;
+            }
+            .notice-item {
+                background-color : #333;
+                color : white;
+            }
+            .recent_notice {
+                background-color : #333;
+                color : white;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+else:  # 라이트 모드
+    st.markdown("""
+        <style>
+            body {
+                background-color: #ffffff;  /* 라이트 모드 배경 */
+                color: #000000 !important;
+            }
+            .stButton>button {
+                background-color: #f0f0f0;  /* 라이트 모드 버튼 배경 */
+                color: black;  /* 라이트 모드 버튼 텍스트 */
+            }
+            .stButton>button:hover { /* 버튼들 호버색*/
+                background-color: white;
+            }
+            .faq-section {
+                background-color: #f9f9f9;
+            }
+            .faq-title {
+                font-size: 18px;
+                color: #333;
+                padding: 10px;
+            }
+            .st-emotion-cache-1c7y2kd { /* 질문자 메시지 스타일 */
+                background-color : #f9f9f9;
+            }
+            .notice-item {
+                background-color : #f9f9f9;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
 # 탭기능 - 사용자 안내서
 st.sidebar.subheader("사용자 안내서" if language == '한국어' else "User Guide")
@@ -52,29 +182,39 @@ if st.session_state.show_guide:
         """)
 
 # 탭기능 - 에브리타임 바로가기
-st.sidebar.subheader("한성대학교 에브리타임 바로가기" if language == '한국어' else "Hansung University Everytime Shortcut")
-if "show_everytime" not in st.session_state:
-    st.session_state.show_everytime = False
+st.sidebar.subheader(
+    "한성대학교 에브리타임 바로가기" if language == '한국어' else "Hansung University Everytime Shortcut"
+)
 
-if st.sidebar.button("한성대학교 에브리타임" if language == '한국어' else "Hansung University Everytime", key="everytime_button"):
-    st.session_state.show_everytime = not st.session_state.show_everytime  
-
-if st.session_state.show_everytime:
-    st.sidebar.markdown(
-        "[에브리타임 바로가기](https://hansung.everytime.kr/)" if language == '한국어' else "[Everytime Shortcut](https://hansung.everytime.kr/)",
-        unsafe_allow_html=True
-    )
-
+# Create a button-style link using Markdown
+st.sidebar.markdown(
+    f"""
+    <a href="https://hansung.everytime.kr/" target="_blank" style="
+        display: inline-block;
+        background-color: #4CAF50;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        margin: 5px 0;
+        font-size: 16px;">
+        {"한성대학교 에브리타임" if language == '한국어' else "Hansung University Everytime"}
+    </a>
+    """,
+    unsafe_allow_html=True
+)
 title_icon = Image.open("./hansungbu.png")
 
 # 언어에 따라 타이틀과 캡션을 설정
 if language == '한국어':
     title_text = "한성대학교 챗봇"
-    caption = "한성대에 관련된 모든 것을 답해드립니다!"
+    caption = "안녕 난 상상부기! 뭐든 물어봐!"
 else:
     title_text = "School Catch"
     caption = "Get answers to everything related to Hansung University!"
 
+    
 # 챗봇 이미지와 최근공지사항 버튼 
 with st.container():
     col1, col2 = st.columns([1, 1])  
@@ -83,7 +223,7 @@ with st.container():
     with col1:
         st.image(title_icon, width=200)  
         st.title(title_text)
-        st.caption(caption)
+        st.markdown(f'<p class="custom-caption">{caption}</p>', unsafe_allow_html=True)
 
 with col2:
     if "show_recent_notices" not in st.session_state:
@@ -97,7 +237,7 @@ with col2:
     if st.session_state.show_recent_notices:
         st.markdown('<div class="recent-notices" style="max-height: 400px; overflow-y: auto;">', unsafe_allow_html=True)
 
-        recent_notices = get_recent_notices()
+        recent_notices = get_recent_notices() 
         if recent_notices:
             for notice in recent_notices:
                 title, link, date = notice
@@ -108,16 +248,15 @@ with col2:
                 # 공지사항 카드 표시
                 st.markdown(
                     f"""
-                    <div style='
+                    <div class = "recent_notice" style='
                         border: 1px solid #ddd; 
                         border-radius: 8px; 
                         padding: 10px; 
                         margin-bottom: 12px; 
-                        width: 100%; 
-                        background-color: #f9f9f9;
+                        width: 100%;
                     '>
-                        <h5 style='margin: 0; color: #007BFF; font-size: 1em; text-align: center;'>{title}</h5>
-                        <p style='margin: 8px 0; font-size: 0.8em; color: #555; text-align: center;'>{formatted_date}</p>
+                        <h5 style='margin: 0; font-size: 1em; text-align: center;'>{title}</h5>
+                        <p style='margin: 8px 0; font-size: 0.8em; text-align: center;'>{formatted_date}</p>
                         <a href='{link}' target='_blank' style='
                             text-decoration: none; 
                             color: white; 
@@ -139,24 +278,88 @@ with col2:
 
 load_dotenv()
 
+
+if 'message_list' not in st.session_state:
+    st.session_state.message_list = []
+
 # 자주 찾는 질문 버튼 스타일링
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap');
-    body { font-family: 'Roboto', sans-serif; color: #f0f0f0; background-color: #2b2b2b; }
-    .faq-section { background-color: #333333; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); margin-bottom: 20px; }
-    .faq-title { font-family: 'Montserrat', sans-serif; font-size: 1.3em; font-weight: 700; color: #ffffff; margin-bottom: 15px; text-align: center; }
-    .stButton>button { font-family: 'Roboto', sans-serif; width: 100%; padding: 12px; border-radius: 8px; background-color: #444444; color: #e0e0e0; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4); border: 1px solid #555555; transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s ease; }
-    .stButton>button:hover { background-color: #555555; box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2); transform: scale(1.05); }
-    .chat-message-user { background-color: #3a3a3a; color: #ffffff; padding: 12px 18px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-    .chat-message-bot { background-color: #4b4b4b; color: #e0e0e0; padding: 12px 18px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    /* 기본 설정 */
+    body {
+        font-family: 'Roboto', sans-serif;
+    }
+    
+    .st-emotion-cache-zkwxxx { /*간격 축소 */
+        gap : 0.3rem;
+    }
+    
+    /* FAQ 섹션 스타일 */
+    .faq-section {
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        margin-bottom: 20px;
+    }
+    
+    .faq-title {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 1.3em;
+        font-weight: 700;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    
+    /* 버튼 스타일 및 애니메이션 */
+    .stButton>button {
+        font-family: 'Roboto', sans-serif;
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+        border: 1px solid #555555;
+        transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s ease;
+    }
+    
+    .stButton>button:hover {
+        box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+    }
+    
+    /* 채팅 메시지 스타일 */
+    .stChatMessage{
+        padding: 12px 18px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+        .faq-section {
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .faq-title {
+            font-size: 1.1em;
+        }
+        
+        .stButton>button {
+            padding: 10px;
+            font-size: 0.9em;
+        }
+    }
+
     </style>
 """, unsafe_allow_html=True)
 
 
 with st.container():
+    faq_title = "📌 자주 질문하는 정보" if language == '한국어' else "📌 Frequently Asked Questions"
     st.markdown('<div class="faq-section">', unsafe_allow_html=True)
-    st.markdown('<div class="faq-title">📌 자주 질문하는 정보</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="faq-title">{faq_title}</div>', unsafe_allow_html=True)
     col1, col2, col3, col4 = st.columns(4)
 
     # 자주 질문하는 정보 버튼 클릭 시 정보들
@@ -364,12 +567,10 @@ for button_text, is_clicked in st.session_state.faq_buttons.items():
 st.markdown("""
     <style>
     .faq-content {
-        background-color: #222222;
         padding: 20px;
         margin-top: 20px;
         border-radius: 12px;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-        color: #ffffff;
         font-size: 1.1em;
         line-height: 1.6;
     }
@@ -382,8 +583,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-if 'message_list' not in st.session_state:
-    st.session_state.message_list = []
 
 # Display past messages
 for message in st.session_state.message_list:

@@ -1,4 +1,4 @@
-import pymysql  # pymysql로 변경
+import mysql.connector
 from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from datetime import datetime
@@ -13,7 +13,7 @@ class Document:
         self.id = id
 
 # Step 1: MySQL에 연결
-db = pymysql.connect(
+db = mysql.connector.connect(
     host="localhost",        
     user="root",            
     password="12345678",    

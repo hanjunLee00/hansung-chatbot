@@ -1,6 +1,6 @@
 import asyncio
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, FewShotChatMessagePromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_openai import ChatOpenAI
@@ -73,11 +73,10 @@ def get_dictionary_chain():
     if dictionary_chain_cache is not None:
         return dictionary_chain_cache
     
-    dictionary = ["사람을 나타내는 표현 -> 학생"]
+    dictionary = ["학생을 나타내는 표현 -> 부기"]
     llm = get_llm()
     prompt = ChatPromptTemplate.from_template(f"""
         사용자의 질문을 보고, 우리의 사전을 참고해서 사용자의 질문을 변경해주세요.
-        변경이 필요 없다면 질문 그대로 반환합니다.
         사전: {dictionary}
         질문: {{question}}
     """)
@@ -91,9 +90,11 @@ def get_history_retriever():
     retriever = get_retriever()
     
     contextualize_q_system_prompt = (
-        "Given a chat history and the latest user question, "
-        "reformulate the question as a standalone query. "
-        "Do NOT answer the question, only reformulate it."
+        "Given a chat history and the latest user question "
+        "which might reference context in the chat history, "
+        "formulate a standalone question which can be understood "
+        "without the chat history. Do NOT answer the question, "
+        "just reformulate it if needed and otherwise return it as is"
     )
     
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
@@ -118,6 +119,7 @@ def get_rag_chain():
     # 시스템 프롬프트 설정
     system_prompt = (
         f"오늘 날짜는 {current_date}입니다. "
+        "당신의 이름은 상상부기입니다. 학생에게 친근한 말투로, 반말모드로 답변해주세요."
         "모든 질문에 대해 최신 공지사항 정보를 바탕으로 답변합니다. "
         "같은 제목의 공지사항이 여러 개 있다면 최신 정보로 답변합니다. "
         "답변 시 URL 링크를 포함해 주세요."
@@ -129,7 +131,7 @@ def get_rag_chain():
             ("system", system_prompt),
             MessagesPlaceholder("chat_history"),
             ("human", "{input}"),
-            ("ai", "{context}"),  # context 추가
+            ("ai", "{context}"),
         ]
     )
 
@@ -150,33 +152,15 @@ def get_rag_chain():
 
     return conversational_rag_chain
 
-# 최근 공지사항 가져오기
-@log_time
-def get_latest_notice():
-    retriever = get_retriever()
-    results = retriever.get_relevant_documents("가장 최근 공지")
-    
-    if results:
-        # 결과 정렬
-        sorted_results = sorted(results, key=lambda x: x.metadata.get('date', ''), reverse=True)
-        latest_notice = sorted_results[0]
-        content = latest_notice.page_content
-        date = latest_notice.metadata.get('date', '날짜 정보 없음')
-        return f"최근 공지사항:\n\n내용: {content}\n날짜: {date}"
-    else:
-        return "최근 공지사항을 찾을 수 없습니다."
-
 # AI 응답 생성
 @log_time
 def get_ai_response(user_message, language="한국어"):
-    if "최근 공지" in user_message:
-        return get_latest_notice()
 
     dictionary_chain = get_dictionary_chain()
     rag_chain = get_rag_chain()
-    tax_chain = {"input": dictionary_chain} | rag_chain
+    pre_chain = {"input": dictionary_chain} | rag_chain
 
-    ai_response_stream = tax_chain.stream(
+    ai_response_stream = pre_chain.stream(
         {"question": user_message},
         config={"configurable": {"session_id": "abc123"}}
     )

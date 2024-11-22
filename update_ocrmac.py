@@ -1,4 +1,3 @@
-import pymysql  # pymysql로 변경
 import requests
 import io
 import objc
@@ -7,12 +6,13 @@ import Vision
 from typing import List, Tuple
 from dotenv import load_dotenv
 from datetime import datetime
+import mysql.connector
 
 # Load environment variables
 load_dotenv()
 
 # Database credentials from environment variables
-db = pymysql.connect(
+db = mysql.connector.connect(
     host="localhost",
     user="root",
     password="12345678",
@@ -64,7 +64,7 @@ def text_from_image(image, recognition_level="accurate", language_preference=Non
         return results
 
 # 기준 날짜 설정 (날짜만 비교)
-reference_date = datetime.now().date()
+reference_date = datetime(2024, 11, 11)
 print(f"Reference date: {reference_date}")
 
 # SQL 쿼리 결과 확인

@@ -1,8 +1,9 @@
-import pymysql  # pymysql로 변경
+
 from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from dotenv import load_dotenv
 from datetime import datetime
+import mysql.connector
 
 load_dotenv()
 
@@ -13,7 +14,7 @@ class Document:
         self.id = id
 
 # Step 1: MySQL에 연결
-db = pymysql.connect(
+db = mysql.connector.connect(
     host="localhost",        
     user="root",            
     password="12345678",    
@@ -25,7 +26,7 @@ cursor = db.cursor()
 # Step 2: 실행 날짜 이후의 데이터를 배열로 반환
 def crawled_data_to_array():
     # 현재 날짜 기준으로 데이터를 필터링
-    reference_date = datetime.now().strftime('%Y-%m-%d')
+    reference_date = datetime(2024, 11, 11)
     fetch_query = """
         SELECT id, title, link, content, date 
         FROM swpre 

@@ -41,17 +41,19 @@ with open("styles.css") as f:
 
 # 탭기능 - 언어선택
 st.sidebar.title("언어 선택 / Language Selection")
-language = st.sidebar.radio("Choose Language", ('한국어', 'English'))
-
-if 'theme' not in st.session_state:
-    st.session_state.theme = "라이트 모드"  # 기본값을 라이트 모드로 설정
+language = st.sidebar.radio("Choose Language", ('한국어', 'English'), key= "language_selector")
 
 if 'theme' not in st.session_state:
     st.session_state.theme = "라이트 모드"  # 기본값을 라이트 모드로 설정
 
 # Sidebar 테마 설정
-st.sidebar.subheader("테마 설정")
-theme = st.sidebar.radio("테마 선택", ["다크 모드", "라이트 모드"], key="theme_selector")
+st.sidebar.subheader("테마 설정" if language == '한국어' else "Theme Settings")
+theme = st.sidebar.radio(
+    "테마 선택" if language == '한국어' else "Select Theme", 
+    ["다크 모드" if language == '한국어' else "Dark Mode", 
+     "라이트 모드" if language == '한국어' else "Light Mode"], 
+    key="theme_selector"
+)
 
 # 테마가 변경되면 session_state에 반영
 if theme != st.session_state.theme:
@@ -61,10 +63,40 @@ if theme != st.session_state.theme:
 if st.session_state.theme == "다크 모드":
     st.markdown("""
         <style>
-            
             body {
                 background-color: #0f0f0f;  /* 다크 모드 배경 */
                 color: white !important;
+            }
+            .notice-card {
+                border: 1px solid #444; 
+                border-radius: 8px; 
+                padding: 10px; 
+                margin-bottom: 12px; 
+                width: 100%; 
+                background-color: #333;
+                color: #ddd;
+            }
+                .notice-card h5 {
+                margin: 0; 
+                color: #66ccff; 
+                font-size: 1em; 
+                text-align: center;
+            }
+            .notice-card h5 a {
+                text-decoration: none; 
+                color: #66ccff;
+            }
+            .notice-card h5 a:hover {
+                color: #99ddff;
+            }
+            .notice-card p {
+                margin: 8px 0; 
+                font-size: 0.8em; 
+                color: #bbb; 
+                text-align: center;
+            }
+            .caption {
+                color : white;
             }
             .stApp { 
                 background-color: #0f0f0f;
@@ -100,9 +132,9 @@ if st.session_state.theme == "다크 모드":
                 background-color: #1c1c1c;
             }
             .faq-title {
-                font-size: 18px;
+                font-size: 25px;
                 color: #f5f5f5;
-                padding: 10px;
+                padding: 12px;
             }
             .stButton>button:hover { /* 버튼들 호버색*/
                 background-color: #555555;
@@ -141,6 +173,37 @@ else:  # 라이트 모드
                 background-color: #ffffff;  /* 라이트 모드 배경 */
                 color: #000000 !important;
             }
+            .notice-card {
+                border: 1px solid #ddd; 
+                border-radius: 8px; 
+                padding: 10px; 
+                margin-bottom: 12px; 
+                width: 100%; 
+                background-color: #f9f9f9;
+                color: #333;
+            }
+            .notice-card h5 {
+                margin: 0; 
+                color: #007BFF; 
+                font-size: 1em; 
+                text-align: center;
+            }
+            .notice-card h5 a {
+                text-decoration: none; 
+                color: #007BFF;
+            }
+            .notice-card h5 a:hover {
+                color: #0056b3;
+            }
+            .notice-card p {
+                margin: 8px 0; 
+                font-size: 0.8em; 
+                color: #555; 
+                text-align: center;
+            }
+            .caption {
+                color : black;
+            }
             .stButton>button {
                 background-color: #f0f0f0;  /* 라이트 모드 버튼 배경 */
                 color: black;  /* 라이트 모드 버튼 텍스트 */
@@ -152,9 +215,9 @@ else:  # 라이트 모드
                 background-color: #f9f9f9;
             }
             .faq-title {
-                font-size: 18px;
+                font-size: 25px;
                 color: #333;
-                padding: 10px;
+                padding: 12px;
             }
             .st-emotion-cache-1c7y2kd { /* 질문자 메시지 스타일 */
                 background-color : #f9f9f9;
@@ -217,7 +280,7 @@ with st.container():
     with col1:
         st.image(title_icon, width=200)  
         st.title(title_text)
-        st.caption(caption)
+        st.markdown(f'<p class = "caption">{caption}</p>', unsafe_allow_html=True)
 
 with col2:
     if "show_recent_notices" not in st.session_state:
@@ -244,23 +307,17 @@ with col2:
 
                 # 공지사항 카드 표시
                 st.markdown(
-                    f"""
-                    <div style='
-                        border: 1px solid #ddd; 
-                        border-radius: 8px; 
-                        padding: 10px; 
-                        margin-bottom: 12px; 
-                        width: 100%; 
-                        background-color: #f9f9f9;
-                    '>
-                        <h5 style='margin: 0; color: #007BFF; font-size: 1em; text-align: center;'>
-                            <a href='{link}' style='text-decoration: none; color: #007BFF;' target='_blank'>{title}</a>
-                        </h5>
-                        <p style='margin: 8px 0; font-size: 0.8em; color: #555; text-align: center;'>게시 날짜: {formatted_date}</p>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                f"""
+                <div class="notice-card">
+                    <h5>
+                        <a href='{link}' target='_blank'>{title}</a>
+                    </h5>
+                    <p>게시일: {formatted_date}</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+                  
         else:
             no_notice_message = "최근 공지사항이 없습니다." if language == '한국어' else "No recent notices available."
             st.info(no_notice_message)
@@ -276,7 +333,7 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Montserrat:wght@400;700&display=swap');
     body { font-family: 'Roboto', sans-serif; color: #f0f0f0; background-color: #2b2b2b; }
     .faq-section { background-color: #333333; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.5); margin-bottom: 20px; }
-    .faq-title { font-family: 'Montserrat', sans-serif; font-size: 1.3em; font-weight: 700; color: #ffffff; margin-bottom: 15px; text-align: center; }
+    # .faq-title { font-family: 'Montserrat', sans-serif; font-size: 1.3em; font-weight: 700; color: #ffffff; margin-bottom: 15px; text-align: center; }
     .stButton>button { font-family: 'Roboto', sans-serif; width: 100%; padding: 12px; border-radius: 8px; background-color: #444444; color: #e0e0e0; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4); border: 1px solid #555555; transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s ease; }
     .stButton>button:hover { background-color: #555555; box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2); transform: scale(1.05); }
     .chat-message-user { background-color: #3a3a3a; color: #ffffff; padding: 12px 18px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }

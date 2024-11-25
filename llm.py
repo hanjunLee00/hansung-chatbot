@@ -10,32 +10,14 @@ from deep_translator import GoogleTranslator
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
-from datetime import datetime
-import time
-
+from datetime import datetime, timedelta
+import re
 from config import answer_examples
-
-
 
 # 세션 저장소 및 현재 날짜 설정
 store = {}
 current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-# 전역 변수로 캐시 생성
-retriever_cache = None
-llm_cache = None
-dictionary_chain_cache = None
-
-# 로그 및 시간 측정 데코레이터
-def log_time(func):
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"[{func.__name__}] 실행 시간: {elapsed_time:.2f}초")
-        return result
-    return wrapper
 
 # 세션 히스토리 관리
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
@@ -43,51 +25,102 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
         store[session_id] = ChatMessageHistory()
     return store[session_id]
 
+# 타임스탬프 값을 보기쉽게 변환함
+def format_timestamp_to_date(timestamp):
+    return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
+# 사용자의 질문 중 날짜 표현이 있으면 Metadata 기반 Filter 생성
+def get_date_filter(user_message):
+    today = datetime.now()
+    
+    # '오늘' 처리
+    if "오늘" in user_message:
+        start_of_day = today.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_day = start_of_day + timedelta(days=1) - timedelta(seconds=1)
+        date_filter = {"expiry_date": {"$gte": int(start_of_day.timestamp()), "$lte": int(end_of_day.timestamp())}}
+        print(f"\n오늘 표현 필터 : {date_filter}")
+        print(f"오늘 시작 : {format_timestamp_to_date(int(start_of_day.timestamp()))}, "
+              f"오늘 종료 : {format_timestamp_to_date(int(end_of_day.timestamp()))}")
+        return date_filter
+    
+    # '어제' 처리
+    elif "어제" in user_message:
+        start_of_yesterday = (today - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_yesterday = start_of_yesterday + timedelta(days=1) - timedelta(seconds=1)
+        date_filter = {"expiry_date": {"$gte": int(start_of_yesterday.timestamp()), "$lte": int(end_of_yesterday.timestamp())}}
+        print(f"\n어제 표현 필터 : {date_filter}")
+        print(f"어제 시작 : {format_timestamp_to_date(int(start_of_yesterday.timestamp()))}, "
+              f"어제 종료 : {format_timestamp_to_date(int(end_of_yesterday.timestamp()))}")
+        return date_filter
+    
+    # '이번 주' 처리
+    elif "이번 주" in user_message:
+        start_of_week = today - timedelta(days=today.weekday())
+        start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_week = start_of_week + timedelta(days=7) - timedelta(seconds=1)
+        date_filter = {"expiry_date": {"$gte": int(start_of_week.timestamp()), "$lte": int(end_of_week.timestamp())}}
+        print(f"\n이번 주 필터 : {date_filter}")
+        print(f"이번 주 시작 : {format_timestamp_to_date(int(start_of_week.timestamp()))}, "
+              f"이번 주 종료 : {format_timestamp_to_date(int(end_of_week.timestamp()))}")
+        return date_filter
+    
+    # '최신' 또는 '최근' 처리
+    elif "최신" in user_message or "최근" in user_message:
+        start_date = today - timedelta(days=7)
+        date_filter = {"expiry_date": {"$gte": int(start_date.timestamp())}}
+        print(f"\n최근 필터 : {date_filter}")
+        print(f"최근 시작 : {format_timestamp_to_date(int(start_date.timestamp()))}")
+        return date_filter
+    
+    # 날짜 형식 (YYYY-MM-DD) 처리
+    elif match := re.search(r"(\d{4})[년\s]?(\d{1,2})[월\s]?(\d{1,2})[일\s]?", user_message):
+        # 사용자가 년, 월, 일을 다양한 방식으로 입력할 수 있도록 처리
+        year = int(match.group(1))
+        month = int(match.group(2))
+        day = int(match.group(3))
+        
+        try:
+            specific_date = datetime(year, month, day)
+            start_of_day = specific_date.replace(hour=0, minute=0, second=0, microsecond=0)
+            end_of_day = start_of_day + timedelta(days=1) - timedelta(seconds=1)
+            date_filter = {"expiry_date": {"$gte": int(start_of_day.timestamp()), "$lte": int(end_of_day.timestamp())}}
+            
+            print(f"\n날짜 지정 필터 : {date_filter}")
+            print(f"날짜 지정 시작 : {format_timestamp_to_date(int(start_of_day.timestamp()))}, "
+                  f"날짜 지정 종료 : {format_timestamp_to_date(int(end_of_day.timestamp()))}\n")
+            return date_filter
+        except ValueError:
+            print(f"날짜 표현이 잘못된 것 같아! 정확한 날짜를 입력해줘!! (예시: 11월 28일, 2024년 11월 28일 등): {user_message}\n")
+            return None
+    
+    return None
+
 # 임베딩 및 Pinecone 검색 설정
-@log_time
-def get_retriever():
-    global retriever_cache
-    if retriever_cache is not None:
-        return retriever_cache
+def get_retriever(user_message):
     
     embedding = OpenAIEmbeddings(model='text-embedding-3-large')
     index_name = 'crawled-db-ver2'
     database = PineconeVectorStore.from_existing_index(index_name=index_name, embedding=embedding)
-    retriever_cache = database.as_retriever(search_kwargs={'k': 3})
+
+    # 날짜 필터 적용
+    date_filter = get_date_filter(user_message)
+    search_kwargs = {"k": 5}  # 기본 검색 설정
+    if date_filter:
+        search_kwargs["filter"] = date_filter  # 날짜 필터 추가
+    
+    retriever_cache = database.as_retriever(search_kwargs=search_kwargs)
     return retriever_cache
 
 # LLM 모델 설정
-@log_time
 def get_llm(model='gpt-4o-mini'):
-    global llm_cache
-    if llm_cache is not None:
-        return llm_cache
 
     llm_cache = ChatOpenAI(model=model)
     return llm_cache
 
-# 사전 학습 체인 생성
-@log_time
-def get_dictionary_chain():
-    global dictionary_chain_cache
-    if dictionary_chain_cache is not None:
-        return dictionary_chain_cache
-    
-    dictionary = ["학생을 나타내는 표현 -> 부기"]
-    llm = get_llm()
-    prompt = ChatPromptTemplate.from_template(f"""
-        사용자의 질문을 보고, 우리의 사전을 참고해서 사용자의 질문을 변경해주세요.
-        사전: {dictionary}
-        질문: {{question}}
-    """)
-    dictionary_chain_cache = prompt | llm | StrOutputParser()
-    return dictionary_chain_cache
-
 # 히스토리 인식 검색기 생성
-@log_time
-def get_history_retriever():
+def get_history_retriever(user_message):
     llm = get_llm()
-    retriever = get_retriever()
+    retriever = get_retriever(user_message)
     
     contextualize_q_system_prompt = (
         "Given a chat history and the latest user question "
@@ -111,16 +144,15 @@ def get_history_retriever():
     return history_aware_retriever
 
 # RAG 체인 생성
-@log_time
-def get_rag_chain():
+def get_rag_chain(user_message):
     llm = get_llm()
-    history_aware_retriever = get_history_retriever()
+    history_aware_retriever = get_history_retriever(user_message)
 
     # 시스템 프롬프트 설정
     system_prompt = (
         f"오늘 날짜는 {current_date}입니다. "
+        "유저가 물어보지 않았는데 마음대로 최신 공지사항, 추천 공지사항과 같은 정보를 알려주지 마세요"
         "당신의 이름은 상상부기입니다. 학생에게 친근한 말투로, 반말모드로 답변해주세요."
-        "모든 질문에 대해 최신 공지사항 정보를 바탕으로 답변합니다. "
         "같은 제목의 공지사항이 여러 개 있다면 최신 정보로 답변합니다. "
         "답변 시 URL 링크를 포함해 주세요."
     )
@@ -153,15 +185,12 @@ def get_rag_chain():
     return conversational_rag_chain
 
 # AI 응답 생성
-@log_time
 def get_ai_response(user_message, language="한국어"):
 
-    dictionary_chain = get_dictionary_chain()
-    rag_chain = get_rag_chain()
-    pre_chain = {"input": dictionary_chain} | rag_chain
+    rag_chain = get_rag_chain(user_message)
 
-    ai_response_stream = pre_chain.stream(
-        {"question": user_message},
+    ai_response_stream = rag_chain.stream(
+        {"input": user_message},
         config={"configurable": {"session_id": "abc123"}}
     )
 

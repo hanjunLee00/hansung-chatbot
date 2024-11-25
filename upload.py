@@ -1,7 +1,8 @@
 import mysql.connector
+import time
+from datetime import datetime
 from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
-from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -22,7 +23,7 @@ db = mysql.connector.connect(
 
 cursor = db.cursor()
 
-# Step 2: 테이블에서 추출된 데이터를 배열로 반환
+# Step 2: 테이블에서 데이터를 배열로 변환
 def crawled_data_to_array():
     fetch_query = "SELECT id, title, link, content, date FROM swpre"
     cursor.execute(fetch_query)
@@ -37,13 +38,20 @@ def store_array_to_vector_db():
     rows = crawled_data_to_array()
     documents = []
     for id, title, link, content, pub_date in rows:
-        # 메타데이터를 포함하여 문서 내용을 생성합니다.
-        formatted_date = datetime.strptime(str(pub_date), "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
-        combined_content = f"Title: {title}\nLink: {link}\nDate: {formatted_date}\nContent: {content}"
-        metadata = {'title': title, 'link': link, 'date': formatted_date}
+        # 날짜를 UNIX 타임스탬프로 변환
+        date_object = datetime.strptime(str(pub_date), "%Y-%m-%d %H:%M:%S")
+        unix_timestamp = int(time.mktime(date_object.replace(hour=0, minute=0, second=0, microsecond=0).timetuple()))
+        
+        # 문서 내용 생성
+        combined_content = f"Title: {title}\nLink: {link}\nContent: {content}"
+        metadata = {
+            'title': title,
+            'link': link,
+            'expiry_date': unix_timestamp  # UNIX 타임스탬프 저장
+        }
         documents.append(Document(combined_content, metadata, id=str(id)))
 
-    # 문서를 Pinecone에 저장합니다.
+    # 문서를 Pinecone에 저장
     database = PineconeVectorStore.from_documents(documents, embedding, index_name=index_name)
 
     print(f"{len(documents)}개의 문서가 Pinecone에 업로드되었습니다.")

@@ -60,6 +60,10 @@ for page_number in range(1, 92):
         link = article.find('link').get_text() if article.find('link') else "No Link"
         pub_date = article.find('pubDate').get_text(strip=True) if article.find('pubDate') else "No Date"
 
+        # 2024년의 공지사항만 처리
+        if '2024' not in pub_date:
+            continue
+
         if link.startswith("/"):
             link = f"{base_domain}{link}"
 

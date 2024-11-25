@@ -17,13 +17,34 @@ cursor = db.cursor()
 
 def get_recent_notices(limit=3):
     cursor.execute("SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT %s", (limit,))
-    return cursor.fetchall()
+    return cursor.fetchall() 
 
+# 비교과 정보 쿼리
+query = "SELECT title, date, link FROM point ORDER BY date DESC LIMIT 5"
+cursor.execute(query)
+results = cursor.fetchall()
+
+comparison_info = ""
+for title, date, link in results:
+    # 문자열 형식의 날짜를 datetime 객체로 변환
+    if isinstance(date, str):
+        date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+    
+    # 날짜를 "YYYY년 MM월 DD일" 형식으로 포맷
+    formatted_date = date.strftime("%Y년 %m월 %d일")
+    
+    # 비교과 정보 추가
+    comparison_info += f"**제목**: {title}  \n"  # 제목 끝에 두 개의 공백 추가
+    comparison_info += f"**날짜**: {formatted_date}  \n"  # 날짜 끝에 두 개의 공백 추가
+    comparison_info += f"[바로가기]({link})  \n\n"  # 링크 끝에 두 개의 공백 추가
+
+
+# 로그인의 학과 정보 바탕으로 공지 추천
 def get_recommended_notices(department):
     cursor = db.cursor(dictionary=True)
     query = """
         SELECT title, link, date 
-        FROM swfree 
+        FROM swpre 
         WHERE content LIKE %s 
         ORDER BY date DESC 
         LIMIT 3
@@ -39,22 +60,41 @@ icon_image = Image.open("./hansungbu.png")
 st.set_page_config(page_title="한성대학교 챗봇", page_icon=icon_image)
 
 # 탭기능 - 언어선택
-st.sidebar.title("언어 선택 / Language Selection")
-language = st.sidebar.radio("Choose Language", ('한국어', 'English'))
 
+st.sidebar.title("언어 선택 / Language Selection")
+language = st.sidebar.radio("abc", ('한국어', 'English'))
+# 구분선 추가
+st.sidebar.markdown(
+    """
+    <hr style="
+        border: none;
+        height: 2px;
+        background-color: #cccccc;
+        margin: 15px 0;
+    ">
+    """,
+    unsafe_allow_html=True
+)
+
+# 테마 기본값 설정
 if 'theme' not in st.session_state:
-    st.session_state.theme = "라이트 모드"  # 기본값을 라이트 모드로 설정
+    st.session_state.theme = "라이트 모드"  # 기본값은 라이트 모드
 
 # Sidebar 테마 설정
-st.sidebar.subheader("테마 설정")
-theme = st.sidebar.radio("테마 선택", ["다크 모드", "라이트 모드"], key="theme_selector")
+st.sidebar.subheader("테마 설정" if language == '한국어' else "Theme Settings")
+theme = st.sidebar.radio(
+    "abc" if language == '한국어' else "abc",
+    ["라이트 모드", "다크 모드"] if language == '한국어' else ["Light Mode", "Dark Mode"],
+    index=0  # 기본 선택값을 "라이트 모드"로 설정
+)
 
 # 테마가 변경되면 session_state에 반영
 if theme != st.session_state.theme:
     st.session_state.theme = theme
+    
 
 # 테마에 맞는 CSS 스타일 적용
-if st.session_state.theme == "다크 모드":
+if st.session_state.theme in ["다크 모드", "Dark Mode"]:
     st.markdown("""
         <style>
             
@@ -160,6 +200,18 @@ else:  # 라이트 모드
             }
         </style>
     """, unsafe_allow_html=True)
+    # 구분선 추가
+st.sidebar.markdown(
+    """
+    <hr style="
+        border: none;
+        height: 2px;
+        background-color: #cccccc;
+        margin: 15px 0;
+    ">
+    """,
+    unsafe_allow_html=True
+)
 
 # 탭기능 - 사용자 안내서
 st.sidebar.subheader("사용자 안내서" if language == '한국어' else "User Guide")
@@ -180,30 +232,72 @@ if st.session_state.show_guide:
         - **Ask concise questions**: Clear and short questions lead to more accurate answers.
         - **Information related to Hansung University only**: Focuses on academics, campus, scholarships, etc., relevant to Hansung University.
         """)
+# 구분선 추가
+st.sidebar.markdown(
+    """
+    <hr style="
+        border: none;
+        height: 2px;
+        background-color: #cccccc;
+        margin: 15px 0;
+    ">
+    """,
+    unsafe_allow_html=True
+)
 
 # 탭기능 - 에브리타임 바로가기
 st.sidebar.subheader(
     "한성대학교 에브리타임 바로가기" if language == '한국어' else "Hansung University Everytime Shortcut"
 )
 
-# Create a button-style link using Markdown
 st.sidebar.markdown(
     f"""
     <a href="https://hansung.everytime.kr/" target="_blank" style="
-        display: inline-block;
-        background-color: #4CAF50;
+        display: block;
+        background-color: #28a745;
         color: white;
         text-align: center;
         text-decoration: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        margin: 5px 0;
-        font-size: 16px;">
-        {"한성대학교 에브리타임" if language == '한국어' else "Hansung University Everytime"}
+        padding: 12px 20px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.3s ease;
+    " onmouseover="this.style.backgroundColor='#218838'" onmouseout="this.style.backgroundColor='#28a745'">
+        {'한성대학교 에브리타임' if language == '한국어' else 'Hansung University Everytime'}
     </a>
     """,
     unsafe_allow_html=True
 )
+
+# 한성대학교 홈페이지 바로가기 버튼
+st.sidebar.subheader(
+    "한성대학교 홈페이지 바로가기" if language == '한국어' else "Hansung University Website Shortcut"
+)
+
+st.sidebar.markdown(f"""
+    <a href="https://www.hansung.ac.kr/sites/hansung/index.do" target="_blank" style="
+        display: block;
+        background-color: #007BFF;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        padding: 12px 20px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        transition: background-color 0.3s ease;
+    " onmouseover="this.style.backgroundColor='#0056b3'" onmouseout="this.style.backgroundColor='#007BFF'">
+        {'한성대학교 홈페이지' if language == '한국어' else 'Hansung University Website'}
+    </a>
+""", unsafe_allow_html=True)
+
 title_icon = Image.open("./hansungbu.png")
 
 # 언어에 따라 타이틀과 캡션을 설정
@@ -237,7 +331,7 @@ with col2:
     if st.session_state.show_recent_notices:
         st.markdown('<div class="recent-notices" style="max-height: 400px; overflow-y: auto;">', unsafe_allow_html=True)
 
-        recent_notices = get_recent_notices() 
+        recent_notices = get_recent_notices()
         if recent_notices:
             for notice in recent_notices:
                 title, link, date = notice
@@ -363,22 +457,21 @@ with st.container():
     col1, col2, col3, col4 = st.columns(4)
 
     # 자주 질문하는 정보 버튼 클릭 시 정보들
-    faq_content = {
-        '한국어': {
-            "🎓 장학금": """
-            ### 2024학년도 2학기 교내 장학금 종류
-            1. **다자녀 장학금**: 세 자녀 이상(다자녀) 가정 중 본교에 재학하는 자녀가 있는 경우.
-            2. **가족 장학금**: 본교 가족이 2인 이상 동시에 재학 중인 경우.
-            3. **장애학생 복지 장학금**: 본교 재학 중인 학생으로서 장애인복지법에 의거 장애인으로 등록된 자.
-            4. **다문화가정 지원 장학금**: 다문화가정의 자녀로서 대한민국 국적자의 재학생.
-
-            자세한 내용은 [여기](https://hansung.everytime.kr/scholarship)에서 확인하실 수 있습니다.
-            """,
-            "🗺️ 캠퍼스맵": """
+faq_content = {
+    '한국어': {
+        "🗺️ 캠퍼스맵": """
             ### 캠퍼스맵 정보
             아래 이미지를 통해 한성대학교의 주요 건물과 시설 위치를 확인하세요.
             [한성대학교 캠퍼스맵](https://www.hansung.ac.kr/hansung/1773/subview.do#none)
             """,
+        "🍴 학식": """
+        ### 한성대학교 학식 정보
+        한성대학교 학생 식당의 대표적인 메뉴와 운영 시간은 아래와 같습니다:
+
+        - **운영 시간**: 학기중 11:00 ~ 19:00 (break time: 15:30 ~ 16:30), 방학중 11:00 ~ 17:00 (break time: 없음)
+
+        [학식 정보](https://www.hansung.ac.kr/hansung/1920/subview.do)를 통해 확인할 수 있습니다.
+        """,
 "💰 등록금": """
 ### 2024학년도 2학기 등록금 정보
 
@@ -436,27 +529,27 @@ with st.container():
 
 자세한 등록금 금액 및 납부 안내는 [여기](https://www.hansung.ac.kr/hansung/8385/subview.do?enc=Zm5jdDF8QEB8JTJGYmJzJTJGaGFuc3VuZyUyRjE0MyUyRjI2MjY5OCUyRmFydGNsVmlldy5kbyUzRnBhZ2UlM0QxJTI2c3JjaENvbHVtbiUzRHNqJTI2c3JjaFdyZCUzRCVFQiU5MyVCMSVFQiVBMSU5RCVFQSVCOCU4OCUyNmJic0NsU2VxJTNEJTI2YmJzT3BlbldyZFNlcSUzRCUyNnJnc0JnbmRlU3RyJTNEJTI2cmdzRW5kZGVTdHIlM0QlMjZpc1ZpZXdNaW5lJTNEZmFsc2UlMjZwYXNzd29yZCUzRCUyNg%3D%3D)를 참조하세요.
 """,
-            "📝 시험일정": """
-            ### 2024학년도 2학기 시험일정
-            시험일정 및 시간표는 학사 공지사항을 통해 확인하실 수 있습니다.
-            자세한 내용은 [여기](https://hansung.everytime.kr/examschedule)를 참조하세요.
+           "📝 비교과": f"""
+            가장 최신 공지 5개를 확인해보세요!
+            자세한 비교과 정보는 [여기](https://hsportal.hansung.ac.kr/ko/program/all/list/0/1?sort=approach)를 참조하세요.  
+            {comparison_info}
             """
         },
-        'English': {
-            "🎓 Scholarships": """
-            ### 2024 Fall Semester Scholarships
-            1. **Multichild Scholarship**: Families with three or more children enrolled at the university.
-            2. **Family Scholarship**: Families with two or more members simultaneously enrolled.
-            3. **Disability Welfare Scholarship**: Students officially registered as disabled under the Welfare Law.
-            4. **Multicultural Family Support Scholarship**: Students from multicultural families with Korean nationality.
-
-            For details, visit [here](https://hansung.everytime.kr/scholarship).
-            """,
-            "🗺️ Campus Map": """
+    'English': {
+        "🗺️ Campus Map": """
             ### Campus Map Information
             Below is the Hansung University campus map, showing the locations of major buildings and facilities.
             [Hansung University Campus Map](https://www.hansung.ac.kr/hansung/1773/subview.do#none)
             """,
+        "🍴 Cafeteria": """
+        ### Hansung University Cafeteria Information
+        The operating hours of the Hansung University student cafeteria are as follows:
+
+        - **Operating Hours**: During the semester: 11:00 AM ~ 7:00 PM (Break time: 3:30 PM ~ 4:30 PM),  
+          During vacation: 11:00 AM ~ 5:00 PM
+
+        For more detailed cafeteria information, visit [here](https://www.hansung.ac.kr/hansung/1920/subview.do).
+        """,
 "💰 Tuition": """
 ### 2024 Fall Semester Tuition
 #### Payment Period and Eligibility
@@ -513,10 +606,10 @@ with st.container():
 
 For detailed tuition fees and payment guidance, please refer to [here](https://www.hansung.ac.kr/hansung/8385/subview.do?enc=Zm5jdDF8QEB8JTJGYmJzJTJGaGFuc3VuZyUyRjE0MyUyRjI2MjY5OCUyRmFydGNsVmlldy5kbyUzRnBhZ2UlM0QxJTI2c3JjaENvbHVtbiUzRHNqJTI2c3JjaFdyZCUzRCVFQiU5MyVCMSVFQiVBMSU5RCVFQSVCOCU4OCUyNmJic0NsU2VxJTNEJTI2YmJzT3BlbldyZFNlcSUzRCUyNnJnc0JnbmRlU3RyJTNEJTI2cmdzRW5kZGVTdHIlM0QlMjZpc1ZpZXdNaW5lJTNEZmFsc2UlMjZwYXNzd29yZCUzRCUyNg%3D%3D).
 """,
-            "📝 Exam Schedule": """
-            ### 2024 Fall Semester Exam Schedule
-            Check the academic announcements for exam schedules and timetables.
-            Find more details [here](https://hansung.everytime.kr/examschedule).
+            "📝 Extracurricular": f"""
+            Check out the latest 5 announcements!
+            For more detailed information on extracurricular activities, please refer to [this link](https://hsportal.hansung.ac.kr/en/program/all/list/0/1?sort=approach).  
+            {comparison_info}
             """
         }
     }
@@ -538,8 +631,9 @@ for i, (button_text, content) in enumerate(faq_content[language].items()):
 
 for button_text, is_clicked in st.session_state.faq_buttons.items():
     if is_clicked:
+        # 선택된 버튼에 대한 키값을 설정
         faq_key = button_text if language == '한국어' else {
-            "🎓 장학금": "🎓 Scholarships",
+            "🍴 학식": "🍴 Cafeteria",
             "🗺️ 캠퍼스맵": "🗺️ Campus Map",
             "💰 등록금": "💰 Tuition",
             "📝 시험일정": "📝 Exam Schedule"
@@ -549,21 +643,49 @@ for button_text, is_clicked in st.session_state.faq_buttons.items():
             st.error("해당 항목에 대한 정보를 찾을 수 없습니다.")
             continue
 
+        # FAQ 콘텐츠 로드
+        content = faq_content[language][faq_key]
+        
+        
+        # FAQ 콘텐츠 표시
         st.markdown(
             f"""
-            <div class="faq-content">
-                {faq_content[language][faq_key]}
-            </div>
+            <div class ="faq-content">
+                {content}
             """,
-            unsafe_allow_html=True, 
+            unsafe_allow_html=True,
         )
 
+        # 캠퍼스 맵
         if faq_key in ["🗺️ 캠퍼스맵", "🗺️ Campus Map"]:
-            st.image("./map.png", caption="한성대학교 캠퍼스맵", use_column_width=True)
+            st.image(
+                "./image/map.png",
+                caption="한성대학교 캠퍼스맵" if language == '한국어' else "Hansung University Campus Map",
+                use_column_width=True
+            )
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        # 학식 사진 갤러리
+        if faq_key in ["🍴 학식", "🍴 Cafeteria"]:
+            st.markdown("#### 학식 사진" if language == '한국어' else "Cafeteria Photo")
 
-
+         # 각 이미지를 한 줄에 하나씩 세로로 표시
+            st.image(
+            "./image/10.jpg",
+             use_column_width=True
+          )
+            st.image(
+            "./image/11.jpg",
+            use_column_width=True
+        )
+            st.image(
+            "./image/12.jpg",
+            use_column_width=True
+        )
+            st.image(
+            "./image/13.jpg",
+            use_column_width=True
+        )
+# 스타일 유지
 st.markdown("""
     <style>
     .faq-content {
@@ -593,7 +715,7 @@ for message in st.session_state.message_list:
         with st.chat_message("ai"):
             st.write(message["content"])
 
-# Chat input for custom questions
+
 # 사용자 입력 처리
 if user_question := st.chat_input(placeholder="한성대에 관련된 궁금한 내용들을 말씀해주세요!"):
     # 사용자 입력을 채팅에 표시

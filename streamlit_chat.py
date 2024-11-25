@@ -245,7 +245,8 @@ if st.session_state.show_guide:
     else:
         st.sidebar.markdown("""
         - **Ask concise questions**: Clear and short questions lead to more accurate answers.
-        - **Information related to Hansung University only**: Focuses on academics, campus, scholarships, etc., relevant to Hansung University.
+        - **
+                            Information related to Hansung University only**: Focuses on academics, campus, scholarships, etc., relevant to Hansung University.
         """)
 
 # 탭기능 - 에브리타임 바로가기

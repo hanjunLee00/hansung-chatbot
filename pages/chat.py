@@ -542,7 +542,6 @@ for button_text, is_clicked in st.session_state.faq_buttons.items():
             f"""
             <div class="faq-content">
                 {faq_content[language][faq_key]}
-            </div>
             """,
             unsafe_allow_html=True, 
         )
@@ -668,4 +667,3 @@ if user_question := st.chat_input(placeholder="한성대에 관련된 궁금한 
         with st.chat_message("ai"):
             ai_message = st.write_stream(ai_response)
         st.session_state.message_list.append({"role": "ai", "content": ai_message})
-

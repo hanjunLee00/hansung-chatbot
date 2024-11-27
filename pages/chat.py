@@ -5,6 +5,9 @@ from PIL import Image
 import time
 from datetime import datetime
 import mysql.connector  # 공지사항 관리를 위한 데이터베이스 사용
+import openai
+
+load_dotenv()
 
 # MySQL 연결 설정
 db = mysql.connector.connect(
@@ -19,19 +22,82 @@ def get_recent_notices(limit=3):
     cursor.execute("SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT %s", (limit,))
     return cursor.fetchall()
 
+# 로그인의 학과 정보 바탕으로 공지 추천
 def get_recommended_notices(department):
     cursor = db.cursor(dictionary=True)
     query = """
         SELECT title, link, date 
         FROM swpre 
-        WHERE content LIKE %s 
         ORDER BY date DESC 
-        LIMIT 3
+        LIMIT 20
     """
-    cursor.execute(query, (f"%{department}%",))  # 학과와 관련된 공지사항 검색
+    cursor.execute(query)  # 학과와 관련된 공지사항 검색
     notices = cursor.fetchall()
     cursor.close()
-    return notices
+    notice_texts = "\n".join([f"- 제목: {n['title']}\n  링크: {n['link']}\n  날짜: {n['date']}" for n in notices])
+
+    # GPT 프롬프트 생성
+    prompt = f"""
+    아래는 최근의 대학 공지사항 목록입니다. '{department}' 학과 학생들에게 유용할 것 같은 공지사항 3개를 추천해주세요. 
+    최신순으로 정렬하며, 학과와 관련 있는 중요한 공지를 우선적으로 선택합니다. 출력시 추천 공지사항 형식을 띄여쓰기 들여쓰기 하나도
+    틀리면 안됩니다.
+    
+    공지사항 목록:
+    {notice_texts}
+    
+    추천 공지사항 형식:
+    - 제목: [공지 제목]
+    - 링크: [공지 링크]
+    - 날짜: [공지 날짜]
+    """
+
+    # OpenAI API 호출
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-4o",  # GPT-4 모델 사용
+            messages=[
+                {"role": "system", "content": "당신은 대학 공지사항 추천 전문가입니다."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+
+        # GPT의 추천 결과 파싱
+        recommendations = response.choices[0].message.content
+        # 추천 공지사항을 리스트로 변환
+        recommended_notices = []
+        if recommendations:
+    # 추천된 공지사항을 리스트로 변환
+            lines = recommendations.split("\n")
+            notice = {}
+            for line in lines:
+    # 각 줄의 내용을 출력
+                line = line.strip()
+                print(f"Processing line: {line}")
+
+                # 공지사항 파싱
+                if line.startswith("- 제목: "):
+                    # 이전 공지가 있다면 리스트에 추가
+                    if notice and 'title' in notice:
+                        print(f"Adding notice: {notice}")
+                        recommended_notices.append(notice)
+                        notice = {}  # 초기화
+                    notice['title'] = line.replace("- 제목: ", "").strip()
+                elif line.startswith("- 링크: "):
+                    notice['link'] = line.replace("- 링크: ", "").strip()
+                elif line.startswith("- 날짜: "):
+                    notice['date'] = line.replace("- 날짜: ", "").strip()
+
+    # 마지막 notice 추가
+            if notice:
+                print(f"Adding final notice: {notice}")
+                recommended_notices.append(notice)
+
+            print(f"Final recommended_notices: {recommended_notices}")
+            return recommended_notices
+
+    except Exception as e:
+        print("OpenAI API 호출 중 오류 발생:", str(e))
+        return []
 
 icon_image = Image.open("./hansungbu.png")
 

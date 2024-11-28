@@ -11,13 +11,12 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from datetime import datetime, timedelta
-import re, time
-from config import answer_examples
+import re
 
 # 세션 저장소 및 현재 날짜 설정
 store = {}
 current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+print(f"현재 날짜 및 시간: {current_date}")
 
 # 세션 히스토리 관리
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
@@ -38,7 +37,7 @@ def get_date_filter(user_message):
     match = re.search(r"(?:(\d{4})[년\s\-\.]?)?\s*(?:(\d{1,2})[월\s\-\.]?)?\s*(\d{1,2})[일]?", user_message)
     
     # '오늘' 처리
-    if "오늘" in user_message:
+    if "오늘" in user_message or "today" in user_message :
         start_of_day = today.replace(hour=0, minute=0, second=0, microsecond=0)
         end_of_day = start_of_day + timedelta(days=1) - timedelta(seconds=1)
         date_filter = {"expiry_date": {"$gte": int(start_of_day.timestamp()), "$lte": int(end_of_day.timestamp())}}
@@ -48,7 +47,7 @@ def get_date_filter(user_message):
         return date_filter
     
     # '어제' 처리
-    elif "어제" in user_message:
+    elif "어제" in user_message or "yesterday" in user_message :
         start_of_yesterday = (today - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         end_of_yesterday = start_of_yesterday + timedelta(days=1) - timedelta(seconds=1)
         date_filter = {"expiry_date": {"$gte": int(start_of_yesterday.timestamp()), "$lte": int(end_of_yesterday.timestamp())}}
@@ -88,13 +87,13 @@ def get_date_filter(user_message):
             print("날짜 계산 중 오류 발생: 유효하지 않은 날짜입니다.")
             
     # 이외의 질문 처리: 기본적으로 "" 필터 사용
-    elif "최근" in user_message or "최신" in user_message:
+    elif "최근" in user_message or "최신" in user_message or "recent" in user_message or "latest" in user_message:
         start_date = today - timedelta(days=7)
         date_filter = {"expiry_date": {"$gte": int(start_date.timestamp())}}
         print(f"\n최근 공지 필터 : {date_filter}")
         return date_filter
     
-    elif "이번 주" in user_message or "이번주" in user_message:
+    elif "이번 주" in user_message or "이번주" in user_message or "this week" in user_message:
         # 이번 주의 시작일 (일요일)
         start_of_week = today - timedelta(days=today.weekday() + 1)  # 일요일로 이동
         start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)

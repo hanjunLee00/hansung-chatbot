@@ -64,7 +64,7 @@ def text_from_image(image, recognition_level="accurate", language_preference=Non
         return results
 
 # 기준 날짜 설정 (날짜만 비교)
-reference_date = datetime(2024, 11, 26)
+reference_date = datetime(2024, 11, 2)
 print(f"Reference date: {reference_date}")
 
 # SQL 쿼리 결과 확인

@@ -26,7 +26,7 @@ cursor = db.cursor()
 # Step 2: 실행 날짜 이후의 데이터를 배열로 반환
 def crawled_data_to_array():
     # 현재 날짜 기준으로 데이터를 필터링
-    reference_date = datetime(2024, 11, 26)
+    reference_date = datetime(2024, 11, 28, 5, 0)
     fetch_query = """
         SELECT id, title, link, content, date 
         FROM swpre 

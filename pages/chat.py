@@ -18,7 +18,7 @@ def get_recent_notices(limit=3):
     cursor.execute("SELECT title, link, date FROM swpre ORDER BY date DESC LIMIT %s", (limit,))
     return cursor.fetchall() 
 
-icon_image = Image.open("./image/hansungbu.png")
+icon_image = Image.open("./hansungbu.png")
 
 # 사용자 지정 아이콘으로 페이지 구성 설정
 st.set_page_config(page_title="한성대학교 챗봇", page_icon=icon_image)
@@ -26,7 +26,7 @@ st.set_page_config(page_title="한성대학교 챗봇", page_icon=icon_image)
 # 탭기능 - 언어선택
 
 st.sidebar.title("언어 선택 / Language Selection")
-language = st.sidebar.radio("abc", ('한국어', 'English'))
+language = st.sidebar.radio(" ", ('한국어', 'English'))
 # 구분선 추가
 st.sidebar.markdown(
     """
@@ -47,7 +47,7 @@ if 'theme' not in st.session_state:
 # Sidebar 테마 설정
 st.sidebar.subheader("테마 설정" if language == '한국어' else "Theme Settings")
 theme = st.sidebar.radio(
-    "abc" if language == '한국어' else "abc",
+    " " if language == '한국어' else " ",
     ["라이트 모드", "다크 모드"] if language == '한국어' else ["Light Mode", "Dark Mode"],
     index=0  # 기본 선택값을 "라이트 모드"로 설정
 )
@@ -191,26 +191,32 @@ if st.session_state.show_guide:
         - **구체적인 정보를 받아보세요!**:   
                             ex) **계절학기 시작 날짜**가 언제야?  
                             ex) **프로그래밍 캠프 날짜**가 언제야?  
+                            ex) **총선거 투표**가 언제까지였더라?  
+
         - **날짜 기반으로 검색해보세요!**:   
                             ex) **어제** 올라온 공지 알려줘!  
                             ex) **오늘** 올라온 공지 있어?  
                             ex) **11월 25일** 올라온 공지 있어? 
                                 (월/일 필수입력!)  
-        - **한성대 관련 정보만 제공**:  
-                            학업, 캠퍼스, 장학금 등 **한성대 관련 정보**에 집중되어 있습니다.  
+                            
+        - **한성대 공지 기반 정보만 제공**:  
+                             **한성대 공지 정보**에 집중되어 있습니다.  
         """)
     else:
         st.sidebar.markdown("""
         - **Get specific information!**:  
                             ex) When does the **seasonal semester start**?  
                             ex) What's the date for the **programming camp**?  
+                            ex) Until when was the **general election voting** period?  
+
         - **Search based on dates!**:  
                             ex) Show me notices posted **yesterday**.  
                             ex) Are there any notices posted **today**?  
-                            ex) Are there any notices posted on **November 25th**?  
-                                (Month/Day required!)  
-        - **Providing information exclusively about Hansung University**:  
-                            Focused on topics such as academics, campus life, scholarships, and other **Hansung University-related information**.  
+                            ex) Summarize **recent** announcements
+
+
+        - **Providing information Based Soley on Hansung University Notices**:  
+                            Focused exclusively on **Hansung University notice information**.  
         """)
 # 구분선 추가
 st.sidebar.markdown(
@@ -511,103 +517,59 @@ faq_content = {
 
 자세한 등록금 금액 및 납부 안내는 [여기](https://www.hansung.ac.kr/hansung/8385/subview.do?enc=Zm5jdDF8QEB8JTJGYmJzJTJGaGFuc3VuZyUyRjE0MyUyRjI2MjY5OCUyRmFydGNsVmlldy5kbyUzRnBhZ2UlM0QxJTI2c3JjaENvbHVtbiUzRHNqJTI2c3JjaFdyZCUzRCVFQiU5MyVCMSVFQiVBMSU5RCVFQSVCOCU4OCUyNmJic0NsU2VxJTNEJTI2YmJzT3BlbldyZFNlcSUzRCUyNnJnc0JnbmRlU3RyJTNEJTI2cmdzRW5kZGVTdHIlM0QlMjZpc1ZpZXdNaW5lJTNEZmFsc2UlMjZwYXNzd29yZCUzRCUyNg%3D%3D)를 참조하세요.
 """,
-           "📝 시설 예약": """
+        "📝 시설 예약": """
             #### 세미나
-
-            - **구분**: 상상베이스
-            - **장소명**: 세미나실
-            - **위치**: 상상관 B2층
-            - **수용인원**: 6~16
-            - **예약 페이지** : (https://www.hansung.ac.kr/onestop/8952/subview.do)
+            -구분: 상상베이스
+            -위치: 상상관 B2층 
+            -수용인원: 6~16
+            -예약 페이지 : (https://www.hansung.ac.kr/onestop/8952/subview.do)
 
             #### 소그룹 활동
+                - [상상베이스] https://www.hansung.ac.kr/onestop/8952/subview.do (상상관 B2층, IB 101~104)
 
-            - **위치**: 
-                - [상상베이스](https://www.hansung.ac.kr/onestop/8952/subview.do) (상상관 B2층, IB 101~104)
-                    - 접이식 가벽
-                    - 수용 인원 : 4~8
                 - [학술정보관](https://www.hansung.ac.kr/hsel/9611/subview.do) (학술정보관 3~6층)
-                    - TV
-                    - 수용 인원 : 3~11
+
                 - [상상파크플러스](https://www.hansung.ac.kr/cncschool/7312/subview.do) (공학관 B1층)
-                    - TV, 빔프로젝터
-                    - 수용 인원 : 8
-
-            #### 개별 학습
-
-            - **위치**: 
-                - 상상베이스 자유이용공간 (상상관 B2층)
-                    - 개인 조명
-                    - 수용 인원 : 50
-                    - 자유 이용
-                - [일반열람실 -집중열람실](https://hsel.hansung.ac.kr/home_login_write.mir) (일반열람실 4층)
-                    - 노트북 이용 불가
-                    - 수용 인원 : 162
-                - [일반열람실 -우촌관열람실](https://hsel.hansung.ac.kr/home_login_write.mir) (우촌관 101호)
-                    - 24시간 운영
-                    - 수용 인원 : 55
-                - 상상파크 상상라운지/오픈스튜디오 (연구관 1층)
-                    - 오뜨 카페
-                    - 수용 인원 : 150
-                    - 자유 이용
-                - 상상파크 C&C 멀티스튜디오 (연구관 1층)
-                    - 공구류 이용
-                    - 수용 인원 : 36
-                    - 일정 없을시 자유 이용
-                - 상상파크플러스 오픈공간 (공학관 B1층)
-                    - 제본기
-                    - 수용 인원 : 80
-                    - 자유 이용
                     
 
             #### 기자재 이용
-
-            - **위치**: 
                 - 상상베이스 프린트존 (상상관 B2층)
                     - 출력, 문서 작업
                     - 자유 이용
+
                 - [대학일자리플러스센터 AI 면접실](https://career.hansung.ac.kr/ko/commu/space/reservation) (상상관 B1층)
                     - 화상면접 지원
-                    - 수용 인원 : 1
+
                 - [상상파크 크레이티브 스튜디오](https://hansung.ac.kr/cncschool/7309/subview.do) (연구관 B1층)
                     - 3D 프린팅
-                    - 수용 인원 : 30
+
                 - [상상파크 디지털 머신룸](https://hansung.ac.kr/cncschool/7309/subview.do) (연구관 B1층)
                     - 레이저 커팅기
-                    - 수용 인원 : 4
+
                 - [상상파크 핸드크래프트룸](https://hansung.ac.kr/cncschool/7309/subview.do) (연구관 B1층)
                     - 스프레이부스 벨트 샌더
-                    - 수용 인원 : 3
+
 
             #### 강의 제작 및 행사
-
-            - **구분**: 영상 스튜디오
-            - **장소명**: 디지털 스튜디오
-            - **위치**: 미래관 1층
-            - **수용인원**: 교직원
-            - **특징**: 가상스튜디오시스템(크로마키), 프롬프터, 전자칠판 등
-            - **예약 페이지** : (https://www.hansung.ac.kr/eist/6851/subview.do)
+            - 장소명: 디지털 스튜디오
+            - 위치: 미래관 1층
+            - 특징: 가상스튜디오시스템(크로마키), 프롬프터, 전자칠판 등
+            - 예약 페이지 : (https://www.hansung.ac.kr/eist/6851/subview.do)
 
             #### 실습 강의 제작
-
-            - **구분**: 영상 스튜디오
-            - **장소명**: 실기 수업 콘텐츠 제작실
-            - **위치**: 미래관 1층
-            - **수용인원**: 교직원
-            - **특징**: 다각도 카메라 (3대), 태블릿 등
-            - **예약 페이지** : (https://www.hansung.ac.kr/eist/6852/subview.do)
+            - 장소명: 실기 수업 콘텐츠 제작실
+            - 위치: 미래관 1층
+            - 특징: 다각도 카메라 (3대), 태블릿 등
+            - 예약 페이지 : (https://www.hansung.ac.kr/eist/6852/subview.do)
 
             #### 화상 면접, 발표 영상 제작
+            - 장소명: 미디어 콘텐츠 제작실
+            - 위치: 미래관 B105호
+            - 특징: 모니터링TV, 태블릿, 웹캠 등
+            - 예약 페이지 : (https://www.hansung.ac.kr/eist/6853/subview.do)
 
-            - **구분**: 영상 스튜디오
-            - **장소명**: 미디어 콘텐츠 제작실
-            - **위치**: 미래관 B105호
-            - **수용인원**: 교직원
-            - **특징**: 모니터링TV, 태블릿, 웹캠 등
-            - **예약 페이지** : (https://www.hansung.ac.kr/eist/6853/subview.do)
-
-            
             """
+    
         },
     'English': {
         "🗺️ Campus Map": """
@@ -682,109 +644,64 @@ For detailed tuition fees and payment guidance, please refer to [here](https://w
 """,
             "📝 Facility": """
             #### Seminar
-
-            - **Category**: Imagination Base
-            - **Location Name**: Seminar Room
-            - **Location**: Imagination Hall, B2 Floor
-            - **Capacity**: 6–16
-            - **Reservation Page**: (https://www.hansung.ac.kr/onestop/8952/subview.do)
+            - Category: Imagination Base
+            - Location: Imagination Hall, B2 Floor
+            - Capacity: 6–16
+            - Reservation Page: [Reservation Link](https://www.hansung.ac.kr/onestop/8952/subview.do)
 
             #### Small Group Activities
-
-            - **Location**: 
+            - Locations:
                 - [Imagination Base](https://www.hansung.ac.kr/onestop/8952/subview.do) (Imagination Hall, B2 Floor, IB 101~104)
-                    - Folding partitions
-                    - Capacity: 4–8
-                - [Library](https://www.hansung.ac.kr/hsel/9611/subview.do) (Library, Floors 3–6)
-                    - TV available
-                    - Capacity: 3–11
+
+                - [Library](https://www.hansung.ac.kr/hsel/9611/subview.do) (Library, Floors 3~6)
+
                 - [Imagination Park Plus](https://www.hansung.ac.kr/cncschool/7312/subview.do) (Engineering Hall, B1 Floor)
-                    - TV, projector available
-                    - Capacity: 8
 
-            #### Individual Study
-
-            - **Location**: 
-                - Free-use space at Imagination Base (Imagination Hall, B2 Floor)
-                    - Individual lighting available
-                    - Capacity: 50
-                    - Free access
-                - [General Reading Room – Concentration Room](https://hsel.hansung.ac.kr/home_login_write.mir) (General Reading Room, 4th Floor)
-                    - Laptops not allowed
-                    - Capacity: 162
-                - [General Reading Room – Uchong Hall](https://hsel.hansung.ac.kr/home_login_write.mir) (Uchong Hall, Room 101)
-                    - 24/7 Operation
-                    - Capacity: 55
-                - Imagination Park Lounge/Open Studio (Research Hall, 1st Floor)
-                    - Ott Café
-                    - Capacity: 150
-                    - Free access
-                - Imagination Park C&C Multi-Studio (Research Hall, 1st Floor)
-                    - Tool usage
-                    - Capacity: 36
-                    - Free access if no schedule
-                - Imagination Park Plus Open Space (Engineering Hall, B1 Floor)
-                    - Binding machine
-                    - Capacity: 80
-                    - Free access
 
             #### Equipment Usage
-
-            - **Location**: 
+            - Locations:
                 - Imagination Base Print Zone (Imagination Hall, B2 Floor)
-                    - Printing, document work
-                    - Free access
+                    - Printing, Document Work
+                    - Free Access
+
                 - [University Job Plus Center AI Interview Room](https://career.hansung.ac.kr/ko/commu/space/reservation) (Imagination Hall, B1 Floor)
-                    - Support for video interviews
-                    - Capacity: 1
+                    - Support for Video Interviews
+
                 - [Imagination Park Creative Studio](https://hansung.ac.kr/cncschool/7309/subview.do) (Research Hall, B1 Floor)
                     - 3D Printing
-                    - Capacity: 30
+
                 - [Imagination Park Digital Machine Room](https://hansung.ac.kr/cncschool/7309/subview.do) (Research Hall, B1 Floor)
-                    - Laser cutter
-                    - Capacity: 4
+                    - Laser Cutter
+
                 - [Imagination Park Handcraft Room](https://hansung.ac.kr/cncschool/7309/subview.do) (Research Hall, B1 Floor)
-                    - Spray booth, belt sander
-                    - Capacity: 3
+                    - Spray Booth, Belt Sander
 
             #### Lecture Production and Events
-
-            - **Category**: Video Studio
-            - **Location Name**: Digital Studio
-            - **Location**: Future Hall, 1st Floor
-            - **Capacity**: Faculty
-            - **Features**: Virtual studio system (chroma key), teleprompter, electronic whiteboard, etc.
-            - **Reservation Page**: (https://www.hansung.ac.kr/eist/6851/subview.do)
+            - Location Name: Digital Studio
+            - Location: Future Hall, 1st Floor
+            - Features: Virtual Studio System (Chroma Key), Teleprompter, Electronic Whiteboard, etc.
+            - Reservation Page: [Reservation Link](https://www.hansung.ac.kr/eist/6851/subview.do)
 
             #### Practical Lecture Production
-
-            - **Category**: Video Studio
-            - **Location Name**: Practical Class Content Production Room
-            - **Location**: Future Hall, 1st Floor
-            - **Capacity**: Faculty
-            - **Features**: Multi-angle cameras (3 units), tablet, etc.
-            - **Reservation Page**: (https://www.hansung.ac.kr/eist/6852/subview.do)
+            - Location Name: Practical Class Content Production Room
+            - Location: Future Hall, 1st Floor
+            - Features: Multi-Angle Cameras (3 units), Tablet, etc.
+            - Reservation Page: [Reservation Link](https://www.hansung.ac.kr/eist/6852/subview.do)
 
             #### Video Interviews and Presentation Production
-
-            - **Category**: Video Studio
-            - **Location Name**: Media Content Production Room
-            - **Location**: Future Hall, B105
-            - **Capacity**: Faculty
-            - **Features**: Monitoring TV, tablet, webcam, etc.
-            - **Reservation Page**: (https://www.hansung.ac.kr/eist/6853/subview.do)
-"""
+            - Location Name: Media Content Production Room
+            - Location: Future Hall, B105
+            - Features: Monitoring TV, Tablet, Webcam, etc.
+            - Reservation Page: [Reservation Link](https://www.hansung.ac.kr/eist/6853/subview.do)
+            """
         }
     }
 
 if "faq_buttons" not in st.session_state:
-    if language == '한국어':
-        st.session_state.faq_buttons = {key: False for key in faq_content['한국어'].keys()}
-    else:
-        st.session_state.faq_buttons = {key: False for key in faq_content['English'].keys()}
+    st.session_state.faq_buttons = {key: False for key in faq_content[language].keys()}
 
-for i, (button_text, content) in enumerate(faq_content[language].items()):  
-    with [col1, col2, col3, col4][i]:
+for i, (button_text, content) in enumerate(faq_content[language].items()):
+    with [col1, col2, col3, col4][i % 4]:  # Dynamically position buttons in columns
         button_clicked = st.session_state.faq_buttons.get(button_text, False)
         if st.button(button_text, key=f"button_{button_text}"):
             st.session_state.faq_buttons[button_text] = not button_clicked
@@ -794,30 +711,63 @@ for i, (button_text, content) in enumerate(faq_content[language].items()):
 
 for button_text, is_clicked in st.session_state.faq_buttons.items():
     if is_clicked:
-        # 선택된 버튼에 대한 키값을 설정
         faq_key = button_text if language == '한국어' else {
             "🍴 학식": "🍴 Cafeteria",
             "🗺️ 캠퍼스맵": "🗺️ Campus Map",
             "💰 등록금": "💰 Tuition",
-            "📝 시험일정": "📝 Exam Schedule"
+            "📝 시설 예약": "📝 Facility"
         }.get(button_text, button_text)
 
         if faq_key not in faq_content[language]:
-            st.error("해당 항목에 대한 정보를 찾을 수 없습니다.")
+            st.error("해당 항목에 대한 정보를 찾을 수 없습니다." if language == "한국어" else "No information found for the selected category.")
             continue
 
-        # FAQ 콘텐츠 로드
         content = faq_content[language][faq_key]
-        
-        
-        # FAQ 콘텐츠 표시
-        st.markdown(
-            f"""
-            <div class ="faq-content">
-                {content}
-            """,
-            unsafe_allow_html=True,
+
+        # 시설 예약 섹션의 경우 추가적인 스타일 적용
+        if faq_key in ["📝 시설 예약", "📝 Facility"]:
+            sections = content.split("####")[1:]  # Split into individual sections
+            st.markdown("<div class='facility-container'>", unsafe_allow_html=True)
+            
+            for section in sections:
+                section_lines = section.strip().split("\n")
+                section_title = section_lines[0].strip()
+                section_content = "<br>".join(
+            line.strip().replace(
+                "https://", "<a href='https://"
+            ).replace(
+                ".do", ".do' target='_blank'>link</a>"
+            )
+            for line in section_lines[1:]
         )
+
+                st.markdown(
+                    f"""
+                    <div class="facility-item" style="
+                        border: 1px solid #ddd;
+                        border-radius: 12px;
+                        padding: 20px;
+                        margin-bottom: 15px;
+                        background-color: #f7f7f7;
+                        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+                    ">
+                        <h4 style="color: #007BFF; margin-bottom: 10px; text-align: center;">{section_title}</h4>
+                        <p style="color: #555; line-height: 1.6; text-align: left; margin: 0;">{section_content}</p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            # Default handling for other sections
+            st.markdown(
+                f"""
+                <div class="faq-content">
+                    {content}
+                """,
+                unsafe_allow_html=True,
+            )
 
         # 캠퍼스 맵
         if faq_key in ["🗺️ 캠퍼스맵", "🗺️ Campus Map"]:
@@ -844,10 +794,7 @@ for button_text, is_clicked in st.session_state.faq_buttons.items():
             "./image/12.jpg",
             use_column_width=True
         )
-            st.image(
-            "./image/13.jpg",
-            use_column_width=True
-        )
+            
 # 스타일 유지
 st.markdown("""
     <style>

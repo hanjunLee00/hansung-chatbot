@@ -26,7 +26,7 @@ st.set_page_config(page_title="한성대학교 챗봇", page_icon=icon_image)
 # 탭기능 - 언어선택
 
 st.sidebar.title("언어 선택 / Language Selection")
-language = st.sidebar.radio("abc", ('한국어', 'English'))
+language = st.sidebar.radio("　", ('한국어', 'English'))
 # 구분선 추가
 st.sidebar.markdown(
     """
@@ -47,7 +47,7 @@ if 'theme' not in st.session_state:
 # Sidebar 테마 설정
 st.sidebar.subheader("테마 설정" if language == '한국어' else "Theme Settings")
 theme = st.sidebar.radio(
-    "abc" if language == '한국어' else "abc",
+    "　" if language == '한국어' else "　",
     ["라이트 모드", "다크 모드"] if language == '한국어' else ["Light Mode", "Dark Mode"],
     index=0  # 기본 선택값을 "라이트 모드"로 설정
 )

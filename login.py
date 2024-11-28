@@ -92,7 +92,7 @@ def get_recommended_notices(department):
         SELECT title, link, date 
         FROM swpre 
         ORDER BY date DESC 
-        LIMIT 20
+        LIMIT 30
     """
     cursor.execute(query)
     notices = cursor.fetchall()
@@ -117,7 +117,7 @@ def get_recommended_notices(department):
     # OpenAI API 호출
     try:
         response = openai.chat.completions.create(
-            model="gpt-4",  # GPT-4 모델 사용
+            model="gpt-4o",  # GPT-4 모델 사용
             messages=[
                 {"role": "system", "content": "당신은 대학 공지사항 추천 전문가입니다."},
                 {"role": "user", "content": prompt}

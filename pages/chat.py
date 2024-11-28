@@ -2,7 +2,6 @@ from dotenv import load_dotenv
 import streamlit as st
 from llm import get_ai_response
 from PIL import Image
-import openai
 from datetime import datetime
 import mysql.connector  # 공지사항 관리를 위한 데이터베이스 사용
 
@@ -189,16 +188,29 @@ if st.sidebar.button("자세히 보기" if language == '한국어' else "View De
 if st.session_state.show_guide:
     if language == '한국어':
         st.sidebar.markdown("""
-        - **구체적인 정보를 입력하세요!**:   
+        - **구체적인 정보를 받아보세요!**:   
                             ex) **계절학기 시작 날짜**가 언제야?  
-                            ex) **프로그래밍 캠프 날짜**가 언제야?
+                            ex) **프로그래밍 캠프 날짜**가 언제야?  
+        - **날짜 기반으로 검색해보세요!**:   
+                            ex) **어제** 올라온 공지 알려줘!  
+                            ex) **오늘** 올라온 공지 있어?  
+                            ex) **11월 25일** 올라온 공지 있어? 
+                                (월/일 필수입력!)  
         - **한성대 관련 정보만 제공**:  
-                            학업, 캠퍼스, 장학금 등 한성대 관련 정보에 집중되어 있습니다.
+                            학업, 캠퍼스, 장학금 등 **한성대 관련 정보**에 집중되어 있습니다.  
         """)
     else:
         st.sidebar.markdown("""
-        - **Ask concise questions**: Clear and short questions lead to more accurate answers.
-        - **Information related to Hansung University only**: Focuses on academics, campus, scholarships, etc., relevant to Hansung University.
+        - **Get specific information!**:  
+                            ex) When does the **seasonal semester start**?  
+                            ex) What's the date for the **programming camp**?  
+        - **Search based on dates!**:  
+                            ex) Show me notices posted **yesterday**.  
+                            ex) Are there any notices posted **today**?  
+                            ex) Are there any notices posted on **November 25th**?  
+                                (Month/Day required!)  
+        - **Providing information exclusively about Hansung University**:  
+                            Focused on topics such as academics, campus life, scholarships, and other **Hansung University-related information**.  
         """)
 # 구분선 추가
 st.sidebar.markdown(
@@ -884,11 +896,16 @@ if "department" in st.session_state:
     </style>
     """, unsafe_allow_html=True)
 
- # 추천 공지사항이 있으면 출력
-if recommended_notices:
-    st.subheader("📌 추천 공지사항")
 
-    department = st.session_state.get('department', '학과 정보 없음')  # 학과 정보 가져오기
+
+# 추천 공지사항이 있으면 출력
+if recommended_notices:
+    st.subheader("📌 Recommended Notices" if language != "한국어" else "📌 추천 공지사항")
+
+    department = st.session_state.get(
+        'department', 
+        'No Department Info' if language != "한국어" else '학과 정보 없음'
+    )
     
     # 학과 정보 출력 (가운데 정렬 및 배경 박스 추가)
     st.markdown(f"""
@@ -904,12 +921,9 @@ if recommended_notices:
         text-align: center;
         color: #333;
     '>
-        <strong>학과 : {department}</strong>
+        <strong>{"Department: " + department if language != "한국어" else "학과 : " + department}</strong>
     </div>
     """, unsafe_allow_html=True)
-    
-    # 언어 설정 (기본적으로 한국어)
-    language = st.session_state.get('language', '한국어')  # 세션에서 언어 정보 가져오기, 기본값은 '한국어'
     
     for notice in recommended_notices:
         # 공지사항 제목, 링크, 날짜를 가져옵니다
@@ -920,7 +934,7 @@ if recommended_notices:
         # 날짜 형식 처리
         if isinstance(date, str):
             date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
-        formatted_date = date.strftime("%Y년 %m월 %d일") if language == '한국어' else date.strftime("%B %d, %Y")
+        formatted_date = date.strftime("%B %d, %Y") if language != "한국어" else date.strftime("%Y년 %m월 %d일")
         
         # 각 공지사항을 박스로 둘러싸기
         st.markdown(f"""
@@ -943,16 +957,24 @@ if recommended_notices:
                 display: block; 
                 text-align: center;
                 margin-top: 10px;
-            '>{'공지 보기' if language == '한국어' else 'View Notice'}</a>
+            '>{'View Notice' if language != "한국어" else '공지 보기'}</a>
         </div>
         """, unsafe_allow_html=True)
 
 else:
-    st.write("추천 공지사항이 없습니다.")
+    st.write("No recommended notices available." if language != "한국어" else "추천 공지사항이 없습니다.")
 
 if 'department' not in st.session_state:
-    st.write("학과 정보가 세션에 없습니다. 로그인 후 다시 시도해주세요.")
+    st.write("Department information is not in the session. Please log in and try again." if language != "한국어" else "학과 정보가 세션에 없습니다. 로그인 후 다시 시도해주세요.")
 
+
+
+if 'message_list' not in st.session_state:
+    st.session_state.message_list = []
+
+for message in st.session_state.message_list:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
 
 # 사용자 입력 처리
 if user_question := st.chat_input(placeholder="한성대에 관련된 궁금한 내용들을 말씀해주세요!"):

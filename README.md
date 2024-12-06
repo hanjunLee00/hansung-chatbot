@@ -25,6 +25,7 @@
 ---
 
 ## 구현 흐름
+<img width="910" alt="스크린샷 2024-12-06 오후 10 40 50" src="https://github.com/user-attachments/assets/f3eba3cf-0360-4eac-914f-bb79d2369a64">
 <img width="885" alt="스크린샷 2024-12-06 오후 10 22 26" src="https://github.com/user-attachments/assets/e2059d10-b62e-4e33-875d-c528bff599c6">
 
 ---

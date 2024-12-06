@@ -25,11 +25,11 @@
 ---
 
 ## 구현 흐름
-- **이미지**: <img width="885" alt="스크린샷 2024-12-06 오후 10 22 26" src="https://github.com/user-attachments/assets/e2059d10-b62e-4e33-875d-c528bff599c6">
+<img width="885" alt="스크린샷 2024-12-06 오후 10 22 26" src="https://github.com/user-attachments/assets/e2059d10-b62e-4e33-875d-c528bff599c6">
 
 ---
 
 ## 채팅 화면
-- **채팅 화면**: <img width="908" alt="스크린샷 2024-12-06 오후 10 23 04" src="https://github.com/user-attachments/assets/f457b0c9-f3e9-4062-b0a5-b90c2c208032">
+<img width="908" alt="스크린샷 2024-12-06 오후 10 23 04" src="https://github.com/user-attachments/assets/f457b0c9-f3e9-4062-b0a5-b90c2c208032">
 
 

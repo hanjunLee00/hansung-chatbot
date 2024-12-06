@@ -1,5 +1,6 @@
 # 한성대학교 챗봇
-![사진](image/pic.png)
+<img width="784" alt="스크린샷 2024-12-06 오후 10 20 58" src="https://github.com/user-attachments/assets/7fc94d17-9319-489e-a430-db903641b8bd">
+
 한성대학교 챗봇 - 스쿨캐치
 ---
 
@@ -22,9 +23,13 @@
 - **배포 플랫폼**: AWS
 
 ---
-## 구현 흐름과 실제 채팅
- - **구현 흐름**
-   - [흐름](image/flow.png)
- - **채팅 화면**
-   - [채팅](image/chatting.png) 
+
+## 구현 흐름
+- **이미지**: <img width="885" alt="스크린샷 2024-12-06 오후 10 22 26" src="https://github.com/user-attachments/assets/e2059d10-b62e-4e33-875d-c528bff599c6">
+
+---
+
+## 채팅 화면
+- **채팅 화면**: <img width="908" alt="스크린샷 2024-12-06 오후 10 23 04" src="https://github.com/user-attachments/assets/f457b0c9-f3e9-4062-b0a5-b90c2c208032">
+
 
